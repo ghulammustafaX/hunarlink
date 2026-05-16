@@ -1,0 +1,23 @@
+# Flutter
+mobile/.dart_tool/
+mobile/build/
+mobile/*.g.dart
+mobile/android/google-services.json
+mobile/ios/GoogleService-Info.plist
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+
+# API Keys — NEVER commit
+agent/.env
+**/*.env
+**/config.secret.json
+**/google_maps_api_key*
+
+# Node
+agent/node_modules/
+agent/package-lock.json
+
+# OS
+.DS_Store
+*.log
+Thumbs.db
