@@ -1,3 +1,4 @@
+process.stdout.setEncoding('utf8');
 const dotenv = require('dotenv');
 dotenv.config();
 
@@ -31,3 +32,23 @@ async function test() {
     }
 }
 test();
+
+require('dotenv').config();
+const { runHunarLinkPipeline } = require('./agent');
+
+const testInputs = [
+  "Mujhe G-13 mein kal subah AC technician chahiye",
+  "Plumber chahiye F-8 mein aaj",
+  "Need electrician in I-8 urgent",
+];
+
+(async () => {
+  for (const input of testInputs) {
+    const result = await runHunarLinkPipeline(input, 'user_test_123');
+    console.log('Final result:', JSON.stringify(result?.booking, null, 2));
+    console.log('\n-------------------------------------------\n');
+    
+    // Wait 3 seconds between runs
+    await new Promise(resolve => setTimeout(resolve, 3000));
+  }
+})();
