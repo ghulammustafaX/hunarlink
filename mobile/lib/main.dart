@@ -4,7 +4,11 @@ import 'screens/home_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp();
+  try {
+    await Firebase.initializeApp();
+  } catch (e) {
+    debugPrint('Firebase failed to initialize: $e');
+  }
   runApp(const HunarLinkApp());
 }
 
@@ -17,9 +21,12 @@ class HunarLinkApp extends StatelessWidget {
       title: 'HunarLink',
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
-        colorScheme: ColorScheme.fromSeed(seedColor: const Color(0xFF2563EB)),
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: const Color(0xFF006053),
+          primary: const Color(0xFF006053),
+        ),
         useMaterial3: true,
-        fontFamily: 'Inter',
+        fontFamily: 'Plus Jakarta Sans',
       ),
       home: const HomeScreen(),
     );
