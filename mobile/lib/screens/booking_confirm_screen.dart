@@ -390,7 +390,7 @@ class BookingConfirmScreen extends StatelessWidget {
                                   // Attempt to write the booking to Firestore if Firebase is configured
                                   final bookingPayload = {
                                     'booking_id': 'BK-${DateTime.now().millisecondsSinceEpoch}',
-                                    'user_id': 'user_mvp_1',
+                                    'user_id': 'user_mustafa_001',
                                     'status': 'confirmed',
                                     'provider_name': provider['name'],
                                     'service_time': provider['name'] == 'Zahid electrician' ? 'Today, 2:30 PM' : 'Tomorrow, 10:00 AM',

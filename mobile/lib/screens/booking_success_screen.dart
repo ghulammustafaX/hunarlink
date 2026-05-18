@@ -1,4 +1,6 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import '../services/firebase_service.dart';
 import 'home_screen.dart';
 
 class BookingSuccessScreen extends StatelessWidget {
@@ -76,279 +78,302 @@ class BookingSuccessScreen extends StatelessWidget {
             child: Column(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.center,
-                        children: [
-                          const SizedBox(height: 24),
-                          // Hero Animation/Icon Area (Nested Rings)
-                          Center(
-                            child: SizedBox(
-                              width: 160,
-                              height: 160,
-                              child: Stack(
-                                alignment: Alignment.center,
+                  child: StreamBuilder<DocumentSnapshot>(
+                    stream: FirebaseService.bookingStream('user_mustafa_001'),
+                    builder: (context, snapshot) {
+                      String resolvedProviderName = providerName;
+                      String resolvedBookingId = '#KAI-29402';
+                      String resolvedArrivalText = arrivalTimeText;
+                      String resolvedReminderDesc = reminderDescription;
+
+                      if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
+                        final booking = snapshot.data!.data() as Map<String, dynamic>;
+                        resolvedProviderName = booking['provider_name'] ?? providerName;
+                        resolvedBookingId = booking['booking_id'] ?? '#KAI-29402';
+                        final serviceTime = booking['service_time'] ?? 'Tomorrow, 10:00 AM';
+                        resolvedArrivalText = resolvedProviderName == 'Zahid electrician' || resolvedProviderName == 'Ali AC Services'
+                            ? 'Ali AC Services will arrive tomorrow at 10:00 AM.'
+                            : '$resolvedProviderName will arrive at $serviceTime.';
+                        resolvedReminderDesc = resolvedProviderName == 'Zahid electrician' || resolvedProviderName == 'Ali AC Services'
+                            ? "We'll notify you at 9:00 AM tomorrow so you're ready for the visit."
+                            : "We'll notify you 1 hour before so you're ready for the visit.";
+                      }
+
+                      return SingleChildScrollView(
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.center,
+                            children: [
+                              const SizedBox(height: 24),
+                              // Hero Animation/Icon Area (Nested Rings)
+                              Center(
+                                child: SizedBox(
+                                  width: 160,
+                                  height: 160,
+                                  child: Stack(
+                                    alignment: Alignment.center,
+                                    children: [
+                                      // Outer Ring 2
+                                      Container(
+                                        width: 160,
+                                        height: 160,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: brandPrimaryContainer.withOpacity(0.05),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      // Outer Ring 1
+                                      Container(
+                                        width: 130,
+                                        height: 130,
+                                        decoration: BoxDecoration(
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: brandPrimaryContainer.withOpacity(0.1),
+                                            width: 2,
+                                          ),
+                                        ),
+                                      ),
+                                      // Colored Background Circle
+                                      Container(
+                                        width: 100,
+                                        height: 100,
+                                        decoration: BoxDecoration(
+                                          color: brandPrimaryContainer.withOpacity(0.1),
+                                          shape: BoxShape.circle,
+                                        ),
+                                      ),
+                                      // Inner Core Check Circle
+                                      Container(
+                                        width: 76,
+                                        height: 76,
+                                        decoration: BoxDecoration(
+                                          color: brandPrimaryContainer,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: brandPrimaryContainer.withOpacity(0.4),
+                                              blurRadius: 20,
+                                              offset: const Offset(0, 8),
+                                            )
+                                          ],
+                                        ),
+                                        child: const Icon(
+                                          Icons.check,
+                                          color: Colors.white,
+                                          size: 40,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Typography Header
+                              const Text(
+                                "You're all set!",
+                                style: TextStyle(
+                                  fontSize: 32,
+                                  fontWeight: FontWeight.w800,
+                                  color: brandPrimary,
+                                  letterSpacing: -0.8,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                ),
+                              ),
+                              const SizedBox(height: 12),
+                              Padding(
+                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                child: Text(
+                                  resolvedArrivalText,
+                                  textAlign: TextAlign.center,
+                                  style: const TextStyle(
+                                    fontSize: 16,
+                                    color: textSecondary,
+                                    height: 1.5,
+                                    fontFamily: 'Plus Jakarta Sans',
+                                  ),
+                                ),
+                              ),
+                              const SizedBox(height: 32),
+
+                              // Reminder Scheduled Card
+                              Container(
+                                padding: const EdgeInsets.all(16),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFF8F9FF),
+                                  borderRadius: BorderRadius.circular(16),
+                                  border: Border.all(
+                                    color: const Color(0xFFBDC9C5).withOpacity(0.3),
+                                  ),
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: brandPrimary.withOpacity(0.04),
+                                      blurRadius: 20,
+                                      offset: const Offset(0, 4),
+                                    )
+                                  ],
+                                ),
+                                child: Row(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Container(
+                                      padding: const EdgeInsets.all(8),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFF006147).withOpacity(0.1),
+                                        borderRadius: BorderRadius.circular(8),
+                                      ),
+                                      child: const Icon(
+                                        Icons.notifications_active,
+                                        color: Color(0xFF006147),
+                                        size: 20,
+                                      ),
+                                    ),
+                                    const SizedBox(width: 16),
+                                    Expanded(
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        children: [
+                                          const Text(
+                                            'Reminder Scheduled',
+                                            style: TextStyle(
+                                              color: brandOnBackground,
+                                              fontWeight: FontWeight.bold,
+                                              fontSize: 14,
+                                              fontFamily: 'Plus Jakarta Sans',
+                                            ),
+                                          ),
+                                          const SizedBox(height: 4),
+                                          Text(
+                                            resolvedReminderDesc,
+                                            style: const TextStyle(
+                                              color: textSecondary,
+                                              fontSize: 13,
+                                              height: 1.4,
+                                              fontFamily: 'Plus Jakarta Sans',
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(height: 24),
+
+                              // Bento-style Provider Details Preview
+                              Row(
                                 children: [
-                                  // Outer Ring 2
-                                  Container(
-                                    width: 160,
-                                    height: 160,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: brandPrimaryContainer.withOpacity(0.05),
-                                        width: 2,
+                                  // Provider Card
+                                  Expanded(
+                                    child: Container(
+                                      height: 110,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF4FF),
+                                        borderRadius: BorderRadius.circular(16),
+                                      ),
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Icon(
+                                            Icons.person_pin,
+                                            color: brandPrimaryContainer,
+                                            size: 24,
+                                          ),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'SERVICE PROVIDER',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  color: Color(0x9A3E4946),
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                resolvedProviderName == 'Zahid electrician' ? 'Ali AC Services' : resolvedProviderName,
+                                                overflow: TextOverflow.ellipsis,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: brandOnBackground,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
                                       ),
                                     ),
                                   ),
-                                  // Outer Ring 1
-                                  Container(
-                                    width: 130,
-                                    height: 130,
-                                    decoration: BoxDecoration(
-                                      shape: BoxShape.circle,
-                                      border: Border.all(
-                                        color: brandPrimaryContainer.withOpacity(0.1),
-                                        width: 2,
+                                  const SizedBox(width: 16),
+                                  // Booking ID Card
+                                  Expanded(
+                                    child: Container(
+                                      height: 110,
+                                      padding: const EdgeInsets.all(16),
+                                      decoration: BoxDecoration(
+                                        color: const Color(0xFFEFF4FF),
+                                        borderRadius: BorderRadius.circular(16),
                                       ),
-                                    ),
-                                  ),
-                                  // Colored Background Circle
-                                  Container(
-                                    width: 100,
-                                    height: 100,
-                                    decoration: BoxDecoration(
-                                      color: brandPrimaryContainer.withOpacity(0.1),
-                                      shape: BoxShape.circle,
-                                    ),
-                                  ),
-                                  // Inner Core Check Circle
-                                  Container(
-                                    width: 76,
-                                    height: 76,
-                                    decoration: BoxDecoration(
-                                      color: brandPrimaryContainer,
-                                      shape: BoxShape.circle,
-                                      boxShadow: [
-                                        BoxShadow(
-                                          color: brandPrimaryContainer.withOpacity(0.4),
-                                          blurRadius: 20,
-                                          offset: const Offset(0, 8),
-                                        )
-                                      ],
-                                    ),
-                                    child: const Icon(
-                                      Icons.check,
-                                      color: Colors.white,
-                                      size: 40,
+                                      child: Column(
+                                        crossAxisAlignment: CrossAxisAlignment.start,
+                                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                                        children: [
+                                          const Icon(
+                                            Icons.receipt_long,
+                                            color: brandPrimaryContainer,
+                                            size: 24,
+                                          ),
+                                          Column(
+                                            crossAxisAlignment: CrossAxisAlignment.start,
+                                            children: [
+                                              const Text(
+                                                'BOOKING ID',
+                                                style: TextStyle(
+                                                  fontSize: 9,
+                                                  color: Color(0x9A3E4946),
+                                                  fontWeight: FontWeight.bold,
+                                                  letterSpacing: 0.5,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                              const SizedBox(height: 2),
+                                              Text(
+                                                resolvedBookingId,
+                                                style: const TextStyle(
+                                                  fontSize: 15,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: brandOnBackground,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
+                                              ),
+                                            ],
+                                          ),
+                                        ],
+                                      ),
                                     ),
                                   ),
                                 ],
                               ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Typography Header
-                          const Text(
-                            "You're all set!",
-                            style: TextStyle(
-                              fontSize: 32,
-                              fontWeight: FontWeight.w800,
-                              color: brandPrimary,
-                              letterSpacing: -0.8,
-                              fontFamily: 'Plus Jakarta Sans',
-                            ),
-                          ),
-                          const SizedBox(height: 12),
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 24.0),
-                            child: Text(
-                              arrivalTimeText,
-                              textAlign: TextAlign.center,
-                              style: const TextStyle(
-                                fontSize: 16,
-                                color: textSecondary,
-                                height: 1.5,
-                                fontFamily: 'Plus Jakarta Sans',
-                              ),
-                            ),
-                          ),
-                          const SizedBox(height: 32),
-
-                          // Reminder Scheduled Card
-                          Container(
-                            padding: const EdgeInsets.all(16),
-                            decoration: BoxDecoration(
-                              color: const Color(0xFFF8F9FF),
-                              borderRadius: BorderRadius.circular(16),
-                              border: Border.all(
-                                color: const Color(0xFFBDC9C5).withOpacity(0.3),
-                              ),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: brandPrimary.withOpacity(0.04),
-                                  blurRadius: 20,
-                                  offset: const Offset(0, 4),
-                                )
-                              ],
-                            ),
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(8),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFF006147).withOpacity(0.1),
-                                    borderRadius: BorderRadius.circular(8),
-                                  ),
-                                  child: const Icon(
-                                    Icons.notifications_active,
-                                    color: Color(0xFF006147),
-                                    size: 20,
-                                  ),
-                                ),
-                                const SizedBox(width: 16),
-                                Expanded(
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    children: [
-                                      const Text(
-                                        'Reminder Scheduled',
-                                        style: TextStyle(
-                                          color: brandOnBackground,
-                                          fontWeight: FontWeight.bold,
-                                          fontSize: 14,
-                                          fontFamily: 'Plus Jakarta Sans',
-                                        ),
-                                      ),
-                                      const SizedBox(height: 4),
-                                      Text(
-                                        reminderDescription,
-                                        style: const TextStyle(
-                                          color: textSecondary,
-                                          fontSize: 13,
-                                          height: 1.4,
-                                          fontFamily: 'Plus Jakarta Sans',
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(height: 24),
-
-                          // Bento-style Provider Details Preview
-                          Row(
-                            children: [
-                              // Provider Card
-                              Expanded(
-                                child: Container(
-                                  height: 110,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF4FF),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      const Icon(
-                                        Icons.person_pin,
-                                        color: brandPrimaryContainer,
-                                        size: 24,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          const Text(
-                                            'SERVICE PROVIDER',
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              color: Color(0x9A3E4946),
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.5,
-                                              fontFamily: 'Plus Jakarta Sans',
-                                            ),
-                                          ),
-                                          const SizedBox(height: 2),
-                                          Text(
-                                            providerName == 'Zahid electrician' ? 'Ali AC Services' : providerName,
-                                            overflow: TextOverflow.ellipsis,
-                                            style: const TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: brandOnBackground,
-                                              fontFamily: 'Plus Jakarta Sans',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
-                              const SizedBox(width: 16),
-                              // Booking ID Card
-                              Expanded(
-                                child: Container(
-                                  height: 110,
-                                  padding: const EdgeInsets.all(16),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFEFF4FF),
-                                    borderRadius: BorderRadius.circular(16),
-                                  ),
-                                  child: const Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
-                                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                                    children: [
-                                      Icon(
-                                        Icons.receipt_long,
-                                        color: brandPrimaryContainer,
-                                        size: 24,
-                                      ),
-                                      Column(
-                                        crossAxisAlignment: CrossAxisAlignment.start,
-                                        children: [
-                                          Text(
-                                            'BOOKING ID',
-                                            style: TextStyle(
-                                              fontSize: 9,
-                                              color: Color(0x9A3E4946),
-                                              fontWeight: FontWeight.bold,
-                                              letterSpacing: 0.5,
-                                              fontFamily: 'Plus Jakarta Sans',
-                                            ),
-                                          ),
-                                          SizedBox(height: 2),
-                                          Text(
-                                            '#KAI-29402',
-                                            style: TextStyle(
-                                              fontSize: 15,
-                                              fontWeight: FontWeight.bold,
-                                              color: brandOnBackground,
-                                              fontFamily: 'Plus Jakarta Sans',
-                                            ),
-                                          ),
-                                        ],
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                              ),
+                              const SizedBox(height: 120), // Padding to avoid clipping footer buttons
                             ],
                           ),
-                          const SizedBox(height: 120), // Padding to avoid clipping footer buttons
-                        ],
-                      ),
-                    ),
+                        ),
+                      );
+                    },
                   ),
-                ),
+                ),,
               ],
             ),
           ),

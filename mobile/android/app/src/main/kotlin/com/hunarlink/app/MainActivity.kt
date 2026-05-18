@@ -1,4 +1,4 @@
-package com.example.hunarlink
+package com.hunarlink.app
 
 import io.flutter.embedding.android.FlutterActivity
 
