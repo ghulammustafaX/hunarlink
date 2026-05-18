@@ -156,6 +156,7 @@ availability_score:  1.0 if available | 0.5 if flexible | 0.0 if urgent conflict
 | Simulation Backend | Firebase Firestore | Booking write = required action simulation |
 | Notifications | Flutter Local Notifications | Simulated reminder push notification |
 
+---
 
-```
 *HunarLink — Connecting Pakistan's skilled workforce, one booking at a time.*
+
