@@ -2,7 +2,8 @@ import 'package:flutter/material.dart';
 import 'booking_confirm_screen.dart';
 
 class ResultsScreen extends StatefulWidget {
-  const ResultsScreen({super.key});
+  final Map<String, dynamic>? apiResult;
+  const ResultsScreen({super.key, this.apiResult});
 
   @override
   State<ResultsScreen> createState() => _ResultsScreenState();
@@ -40,6 +41,97 @@ class _ResultsScreenState extends State<ResultsScreen> {
       "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAJu8kaz1jVDexb2QVnUCqS7XBK4Vg2Ax7X6T4O51oavJcYt3SzSUjwxc9yFwm7TrPkfT5XOjjIAnrjJ9WG_XlaeL4kyx12EjRKcINlzqcAoDB6ltuYQBSw3sjSPgLQ48V3RzLuPIBylL05pZSAFjsIZ97GR4it1uPspEopvDhNwvsLjM_pe-F1yFU5CUiqMTVuLs7gmTAA4Ldj9tc29u4Z1-cqSA8jjg11niXYX0yjzVnSU2QwdI6ZsiohMqNhz85d2T86gxn1EUM",
     }
   ];
+
+  List<Map<String, dynamic>> _getDynamicProviders() {
+    if (widget.apiResult != null && widget.apiResult!['data'] != null) {
+      final data = widget.apiResult!['data'];
+      final selected = data['selected'];
+      if (selected != null) {
+        return [
+          {
+            "name": selected['name'] ?? "Zahid electrician",
+            "distance": selected['distance'] ?? "2.1 km",
+            "rating": selected['rating']?.toString() ?? "4.8",
+            "price": "Rs. 1,200",
+            "best": true,
+            "reasoning": "Closest available with highest rating",
+            "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAoHBS2x_7o59qdcpQTXqvgGLfIZvEQjEBP6Nb1xMXvnqdJcLsgDYsfFHu9sYfNm_g8JBVBOv1RDGpfY7v5xr8NikvYyYO_3zUI3tfgD_BGnTHXUVrhcQ4_N4g9wq3optmCg67t4ifnQ1aFODbe-tNe1fKug2HYIIX23OpBKLGpqEEma6XcnBdqNnjuBTMhFrilZej7bMzj94sM4R7J97qo2oC5v3bKKdAKFYWOZAVkMXETbeVXPf8_m8skCfBeBu3rmk_d0_vMvgo",
+          },
+          ...providers.where((p) => p['best'] != true).toList()
+        ];
+      }
+    }
+    return providers;
+  }
+
+  Widget _buildIntelligenceInsight(Color brandPrimary, Color textSecondary) {
+    String name = "Zahid electrician";
+    String details = " was selected as the best match due to their 100% completion rate for similar tasks and proximity, ensuring they can reach you in under 20 minutes.";
+    
+    if (widget.apiResult != null && widget.apiResult!['data'] != null) {
+      final data = widget.apiResult!['data'];
+      final selected = data['selected'];
+      if (selected != null) {
+        name = selected['name'] ?? "Zahid electrician";
+        final score = selected['score']?.toString() ?? "9.5";
+        final dist = selected['distance'] ?? "2.1 km";
+        details = " was selected as the best match by our Antigravity AI agent based on a rank score of $score, considering real-time Google Maps distance of $dist and historical star ratings.";
+      }
+    }
+
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(24),
+      decoration: BoxDecoration(
+        color: const Color(0xFFEFF4FF),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: brandPrimary.withOpacity(0.1)),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              const Icon(Icons.auto_awesome, color: brandPrimary, size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'KHIDMAT INTELLIGENCE INSIGHT',
+                style: TextStyle(
+                  color: brandPrimary,
+                  fontWeight: FontWeight.bold,
+                  fontSize: 11,
+                  letterSpacing: 1.2,
+                  fontFamily: 'Plus Jakarta Sans',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          RichText(
+            text: TextSpan(
+              style: TextStyle(
+                color: textSecondary,
+                fontSize: 14,
+                height: 1.5,
+                fontFamily: 'Plus Jakarta Sans',
+              ),
+              children: [
+                const TextSpan(text: "We've analyzed nearby local providers for your request. "),
+                TextSpan(
+                  text: name,
+                  style: TextStyle(
+                    color: brandPrimary,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                TextSpan(text: details),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -118,7 +210,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
 
               // Provider Stack (Vertical List)
               Column(
-                children: providers.map((provider) {
+                children: _getDynamicProviders().map((provider) {
                   final isBest = provider['best'] == true;
                   return _buildProviderCard(
                     context: context,
@@ -135,60 +227,7 @@ class _ResultsScreenState extends State<ResultsScreen> {
               const SizedBox(height: 24),
 
               // AI Reasoning Section (Khidmat Intelligence Insight)
-              Container(
-                width: double.infinity,
-                padding: const EdgeInsets.all(24),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFEFF4FF),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: brandPrimary.withOpacity(0.1)),
-                ),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        const Icon(Icons.auto_awesome, color: brandPrimary, size: 20),
-                        const SizedBox(width: 8),
-                        Text(
-                          'KHIDMAT INTELLIGENCE INSIGHT',
-                          style: TextStyle(
-                            color: brandPrimary,
-                            fontWeight: FontWeight.bold,
-                            fontSize: 11,
-                            letterSpacing: 1.2,
-                            fontFamily: 'Plus Jakarta Sans',
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 12),
-                    RichText(
-                      text: TextSpan(
-                        style: const TextStyle(
-                          color: textSecondary,
-                          fontSize: 14,
-                          height: 1.5,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                        children: [
-                          const TextSpan(text: "We've analyzed 24 local providers for your request. "),
-                          TextSpan(
-                            text: "Zahid electrician",
-                            style: TextStyle(
-                              color: brandPrimary,
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          const TextSpan(
-                            text: " was selected as the best match due to their 100% completion rate for similar tasks and proximity, ensuring they can reach you in under 20 minutes.",
-                          ),
-                        ],
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              _buildIntelligenceInsight(brandPrimary, textSecondary),
               const SizedBox(height: 120), // Padding to avoid clipping with bottom nav
             ],
           ),

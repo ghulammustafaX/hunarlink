@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        /* Custom glow effect following brand guidelines */
+        .glow-teal {
+            box-shadow: 0 0 40px 10px rgba(11, 123, 107, 0.2);
+        }
+    </style>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f8f9ff",
+                        "tertiary-container": "#007c5b",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#7bd7c4",
+                        "outline": "#6e7a76",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#0b7b6b",
+                        "surface-variant": "#d3e4fe",
+                        "primary": "#006053",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "tertiary-fixed": "#8df7cc",
+                        "surface-container": "#e5eeff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-container": "#b6ffde",
+                        "surface-tint": "#006b5c",
+                        "on-primary-fixed-variant": "#005045",
+                        "inverse-primary": "#7bd7c4",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#454747",
+                        "primary-fixed": "#98f3df",
+                        "surface-container-low": "#eff4ff",
+                        "surface-dim": "#cbdbf5",
+                        "tertiary": "#006147",
+                        "on-background": "#0b1c30",
+                        "on-primary-container": "#b3ffed",
+                        "on-tertiary-fixed-variant": "#00513b",
+                        "surface": "#f8f9ff",
+                        "on-tertiary-fixed": "#002116",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3e4946",
+                        "inverse-surface": "#213145",
+                        "tertiary-fixed-dim": "#71dab1",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-container": "#dfe0e0",
+                        "on-primary-fixed": "#00201b",
+                        "surface-bright": "#f8f9ff",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "error-container": "#ffdad6",
+                        "secondary": "#5d5f5f",
+                        "on-surface": "#0b1c30",
+                        "outline-variant": "#bdc9c5",
+                        "surface-container-high": "#dce9ff",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#616363",
+                        "surface-dark": "#062E28"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "xl": "32px",
+                        "margin-mobile": "20px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                }
+            }
+        }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface-dark min-h-screen flex flex-col text-white">
+<!-- Top AppBar (Injected from JSON Identity) -->
+<header class="w-full top-0 sticky flex justify-between items-center px-margin-mobile h-14 w-full bg-transparent z-50">
+<div class="flex items-center gap-base">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="menu">menu</span>
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-primary-fixed-dim">Khidmat AI 🇵🇰</h1>
+</div>
+<div class="w-8 h-8 rounded-full overflow-hidden border border-primary-fixed-dim/30">
+<img alt="User profile photo" class="w-full h-full object-cover" data-alt="A professional close-up portrait of a young South Asian man with a friendly and trustworthy expression, set against a blurred indoor corporate office background. The lighting is soft and natural, emphasizing a premium and modern aesthetic consistent with a high-end service application's user profile." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDwZX9mLcrFQrHxRqkCjQUaAcU7egyWAa0bEElMgFDqZM88HKtCyZAj1Vu3FUcR6Vp9DtFqHXsPwk52UneshwNZ6g0W7YejdE_akhjdcyTMWzzHVvqX4dN3dUZPJLUKjFJlTjK4eAQUMDrE_rCbHqbbuKXKKKBXHz3yGpV5wGSVrOIK7lNI7wT0Rv-iF6nJNPnFLWdj2ues8c4aYkEMfQQjNWWwbkBf0qk_vbcshVVs0qhxVglwS1gGK5Mk64PCxV9dMop3AVl4WvA"/>
+</div>
+</header>
+<!-- Main Content Canvas (Focused Journey - Shell Navigation Suppressed) -->
+<main class="flex-grow flex flex-col items-center justify-center px-margin-mobile pb-xl">
+<!-- Header Text -->
+<div class="text-center mb-xl">
+<h2 class="font-headline-md text-headline-md text-primary-fixed-dim mb-xs">Agent is working...</h2>
+<p class="font-body-md text-body-md text-outline-variant/80">Securing the best service for your home</p>
+</div>
+<!-- Central Pulsing AI Engine -->
+<div class="relative w-48 h-48 flex items-center justify-center mb-xl">
+<!-- Pulsing Rings -->
+<div class="absolute inset-0 border-2 border-primary-container/20 rounded-full animate-ping"></div>
+<div class="absolute inset-4 border-2 border-primary-container/40 rounded-full animate-pulse"></div>
+<div class="absolute inset-8 border border-primary-fixed-dim/60 rounded-full"></div>
+<!-- AI Core Icon -->
+<div class="relative z-10 w-24 h-24 bg-primary-container rounded-full flex items-center justify-center glow-teal shadow-2xl border border-primary-fixed-dim/40">
+<span class="material-symbols-outlined text-4xl text-on-primary-container" data-icon="auto_awesome" data-weight="fill" style="font-variation-settings: 'FILL' 1;">auto_awesome</span>
+</div>
+</div>
+<!-- Intelligent Processing Steps (Bento-inspired vertical flow) -->
+<div class="w-full max-w-md space-y-md">
+<!-- Step 1: Completed -->
+<div class="flex items-center gap-md p-md bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-primary-fixed-dim">Understanding your request...</p>
+</div>
+</div>
+<!-- Step 2: Completed -->
+<div class="flex items-center gap-md p-md bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-primary-fixed-dim">Detecting language: Roman Urdu</p>
+</div>
+</div>
+<!-- Step 3: Completed -->
+<div class="flex items-center gap-md p-md bg-white/5 rounded-xl border border-white/10 backdrop-blur-sm transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-container/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-primary-fixed-dim" data-icon="check_circle" data-weight="fill" style="font-variation-settings: 'FILL' 1;">check_circle</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-primary-fixed-dim">Parsed: AC Technician · G-13 · Tomorrow Morning</p>
+</div>
+</div>
+<!-- Step 4: Active/Processing -->
+<div class="flex items-center gap-md p-md bg-primary-container/10 rounded-xl border border-primary-container/30 backdrop-blur-md shadow-lg scale-[1.02] ring-1 ring-primary-fixed-dim/20 transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full bg-primary-container flex items-center justify-center">
+<div class="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin"></div>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-on-primary-container">Searching nearby providers...</p>
+</div>
+<span class="material-symbols-outlined text-primary-fixed-dim/50 text-sm animate-pulse" data-icon="location_on">location_on</span>
+</div>
+<!-- Step 5: Pending -->
+<div class="flex items-center gap-md p-md bg-white/0 rounded-xl border border-white/5 opacity-40 transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="circle">circle</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-outline">Ranking by distance + rating...</p>
+</div>
+</div>
+<!-- Step 6: Pending -->
+<div class="flex items-center gap-md p-md bg-white/0 rounded-xl border border-white/5 opacity-40 transition-all duration-300">
+<div class="flex-shrink-0 w-8 h-8 rounded-full border border-white/20 flex items-center justify-center">
+<span class="material-symbols-outlined text-outline text-sm" data-icon="circle">circle</span>
+</div>
+<div class="flex-grow">
+<p class="font-label-md text-label-md text-outline">Selected best provider. Preparing booking...</p>
+</div>
+</div>
+</div>
+<!-- Intelligent Background Decoration (Abstract Pakistani geometric patterns in low opacity) -->
+<div class="fixed bottom-0 left-0 right-0 h-64 pointer-events-none opacity-[0.03]" style="background-image: radial-gradient(circle at 2px 2px, #0b7b6b 1px, transparent 0); background-size: 24px 24px;"></div>
+</main>
+<!-- Footer Status -->
+<footer class="p-margin-mobile text-center mb-xl">
+<div class="inline-flex items-center gap-sm bg-white/5 px-lg py-sm rounded-full border border-white/10">
+<span class="w-2 h-2 rounded-full bg-tertiary-fixed-dim animate-pulse"></span>
+<span class="font-label-sm text-label-sm text-outline-variant uppercase tracking-widest">System Secure &amp; Encrypted</span>
+</div>
+</footer>
+</body></html>

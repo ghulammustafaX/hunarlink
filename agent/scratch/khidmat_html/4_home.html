@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+
+<html class="light" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Khidmat AI - Seamless Service</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            darkMode: "class",
+            theme: {
+                extend: {
+                    "colors": {
+                        "background": "#f8f9ff",
+                        "tertiary-container": "#007c5b",
+                        "error": "#ba1a1a",
+                        "primary-fixed-dim": "#7bd7c4",
+                        "outline": "#6e7a76",
+                        "on-error-container": "#93000a",
+                        "primary-container": "#0b7b6b",
+                        "surface-variant": "#d3e4fe",
+                        "primary": "#006053",
+                        "surface-container-lowest": "#ffffff",
+                        "on-secondary": "#ffffff",
+                        "secondary-fixed-dim": "#c6c6c7",
+                        "tertiary-fixed": "#8df7cc",
+                        "surface-container": "#e5eeff",
+                        "surface-container-highest": "#d3e4fe",
+                        "on-tertiary-container": "#b6ffde",
+                        "surface-tint": "#006b5c",
+                        "on-primary-fixed-variant": "#005045",
+                        "inverse-primary": "#7bd7c4",
+                        "secondary-fixed": "#e2e2e2",
+                        "on-primary": "#ffffff",
+                        "on-secondary-fixed-variant": "#454747",
+                        "primary-fixed": "#98f3df",
+                        "surface-container-low": "#eff4ff",
+                        "surface-dim": "#cbdbf5",
+                        "tertiary": "#006147",
+                        "on-background": "#0b1c30",
+                        "on-primary-container": "#b3ffed",
+                        "on-tertiary-fixed-variant": "#00513b",
+                        "surface": "#f8f9ff",
+                        "on-tertiary-fixed": "#002116",
+                        "on-tertiary": "#ffffff",
+                        "on-surface-variant": "#3e4946",
+                        "inverse-surface": "#213145",
+                        "tertiary-fixed-dim": "#71dab1",
+                        "inverse-on-surface": "#eaf1ff",
+                        "secondary-container": "#dfe0e0",
+                        "on-primary-fixed": "#00201b",
+                        "surface-bright": "#f8f9ff",
+                        "on-secondary-fixed": "#1a1c1c",
+                        "error-container": "#ffdad6",
+                        "secondary": "#5d5f5f",
+                        "on-surface": "#0b1c30",
+                        "outline-variant": "#bdc9c5",
+                        "surface-container-high": "#dce9ff",
+                        "on-error": "#ffffff",
+                        "on-secondary-container": "#616363"
+                    },
+                    "borderRadius": {
+                        "DEFAULT": "0.25rem",
+                        "lg": "0.5rem",
+                        "xl": "0.75rem",
+                        "full": "9999px"
+                    },
+                    "spacing": {
+                        "md": "16px",
+                        "xl": "32px",
+                        "margin-mobile": "20px",
+                        "sm": "12px",
+                        "base": "8px",
+                        "lg": "24px",
+                        "xs": "4px",
+                        "gutter": "16px"
+                    },
+                    "fontFamily": {
+                        "headline-sm": ["Plus Jakarta Sans"],
+                        "label-md": ["Plus Jakarta Sans"],
+                        "headline-md": ["Plus Jakarta Sans"],
+                        "body-md": ["Plus Jakarta Sans"],
+                        "body-lg": ["Plus Jakarta Sans"],
+                        "display-lg": ["Plus Jakarta Sans"],
+                        "display-lg-mobile": ["Plus Jakarta Sans"],
+                        "label-sm": ["Plus Jakarta Sans"]
+                    },
+                    "fontSize": {
+                        "headline-sm": ["20px", {"lineHeight": "28px", "fontWeight": "600"}],
+                        "label-md": ["14px", {"lineHeight": "20px", "fontWeight": "600"}],
+                        "headline-md": ["24px", {"lineHeight": "32px", "fontWeight": "700"}],
+                        "body-md": ["16px", {"lineHeight": "24px", "fontWeight": "400"}],
+                        "body-lg": ["18px", {"lineHeight": "28px", "fontWeight": "400"}],
+                        "display-lg": ["40px", {"lineHeight": "48px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "display-lg-mobile": ["32px", {"lineHeight": "40px", "letterSpacing": "-0.02em", "fontWeight": "800"}],
+                        "label-sm": ["12px", {"lineHeight": "16px", "fontWeight": "500"}]
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body { font-family: 'Plus Jakarta Sans', sans-serif; }
+        .soft-teal-shadow {
+            box-shadow: 0 4px 20px rgba(0, 96, 83, 0.04);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background text-on-background min-h-screen flex flex-col">
+<!-- TopAppBar -->
+<header class="w-full top-0 sticky bg-background z-50 flex justify-between items-center px-margin-mobile h-14 w-full">
+<div class="flex items-center gap-base">
+<button class="material-symbols-outlined text-primary hover:bg-surface-container-low transition-colors p-2 rounded-full active:scale-95 duration-200">
+                menu
+            </button>
+<h1 class="font-headline-sm text-headline-sm-mobile font-bold text-primary">Khidmat AI 🇵🇰</h1>
+</div>
+<div class="flex items-center gap-md">
+<div class="w-8 h-8 rounded-full overflow-hidden border border-outline-variant">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="A professional studio headshot of a friendly South Asian man in his 30s, wearing business casual attire. The background is a clean, minimalist soft teal gradient reflecting a modern corporate identity. The lighting is bright and airy, emphasizing a welcoming and trustworthy service-oriented atmosphere." src="https://lh3.googleusercontent.com/aida-public/AB6AXuDssL5c18tNaw6jcEGgNBGUjKKgoyxFBrVNDhodnPyzeNJnr7BN5lWoZZ2V7pUK-l4kfxWBwkViBd2dReHOoRMoaoFZSc3MPd2TgtAI9dqck9roxmauVaz9bOcfTNQ33aJCPA7dGPW6UK4dDXXgPGpcajStUcDsYBr8s9vDSuvExIFZJvGHqBIhss3VUH_1ns00s1DDdzgZOHikbNsAA9jbt5m7JsQRz0MqsZGfJTIUNZD8WRXIUFWLZBviRCH_fvCghb8_g5roNUM"/>
+</div>
+</div>
+</header>
+<!-- Main Content -->
+<main class="flex-grow px-margin-mobile flex flex-col pt-xl">
+<!-- Hero Section -->
+<section class="flex flex-col gap-lg">
+<h2 class="font-display-lg-mobile text-display-lg-mobile text-on-background tracking-tight">
+                Apni Zaroorat Batayein
+            </h2>
+<div class="space-y-md">
+<!-- Search Input Container -->
+<div class="relative group">
+<input class="w-full bg-[#F1F5F9] border-none rounded-xl px-lg py-md font-body-md text-on-surface focus:ring-2 focus:ring-primary focus:bg-white transition-all outline-none placeholder:text-on-surface-variant/60" placeholder="Koi bhi service dhundein... (e.g. AC technician G-13)" type="text"/>
+</div>
+<!-- Language Support Badge -->
+<div class="flex items-center">
+<span class="inline-flex items-center gap-xs px-sm py-1 rounded-full bg-primary/10 text-primary font-label-sm text-label-sm">
+<span class="material-symbols-outlined text-[14px]">check_circle</span>
+                        EN / UR / Roman UR supported
+                    </span>
+</div>
+</div>
+<!-- Primary Action Button -->
+<button class="w-full bg-primary-container text-on-primary font-bold py-md rounded-xl flex justify-center items-center gap-base active:scale-95 transition-transform duration-200 shadow-md">
+<span class="font-headline-sm">Dhundein</span>
+<span class="material-symbols-outlined">arrow_forward</span>
+</button>
+</section>
+<!-- Featured / Contextual Bento Section -->
+<section class="mt-xl grid grid-cols-2 gap-gutter">
+<div class="col-span-2 p-lg bg-surface-container-low rounded-xl border border-primary/5 flex items-center justify-between overflow-hidden relative soft-teal-shadow">
+<div class="z-10">
+<p class="font-label-sm text-primary mb-xs uppercase tracking-wider">AI Powered</p>
+<h3 class="font-headline-sm text-on-surface">Khidmat Assistant</h3>
+<p class="font-body-md text-on-surface-variant">Tap to chat for complex requests</p>
+</div>
+<span class="material-symbols-outlined text-primary text-[48px] opacity-20 absolute right-4">auto_awesome</span>
+</div>
+<div class="p-md bg-white rounded-xl soft-teal-shadow flex flex-col gap-sm border border-transparent hover:border-primary-container/20 transition-all">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">electric_bolt</span>
+</div>
+<h4 class="font-label-md text-on-surface">Electrician</h4>
+</div>
+<div class="p-md bg-white rounded-xl soft-teal-shadow flex flex-col gap-sm border border-transparent hover:border-primary-container/20 transition-all">
+<div class="w-10 h-10 bg-secondary-container rounded-lg flex items-center justify-center">
+<span class="material-symbols-outlined text-primary">cleaning_services</span>
+</div>
+<h4 class="font-label-md text-on-surface">Cleaning</h4>
+</div>
+</section>
+</main>
+<!-- BottomNavBar -->
+<nav class="fixed bottom-0 w-full z-50 flex justify-around items-center px-4 pb-4 pt-2 shadow-lg bg-surface-container-lowest rounded-t-xl">
+<!-- Home Active -->
+<a class="flex flex-col items-center justify-center bg-primary-container text-on-primary-container rounded-full px-4 py-1 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">home</span>
+<span class="font-label-sm text-label-sm">Home</span>
+</a>
+<!-- Bookings -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container/10 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined">calendar_month</span>
+<span class="font-label-sm text-label-sm">Bookings</span>
+</a>
+<!-- AI Assistant -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container/10 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined">auto_awesome</span>
+<span class="font-label-sm text-label-sm">Assistant</span>
+</a>
+<!-- Profile -->
+<a class="flex flex-col items-center justify-center text-on-surface-variant p-2 hover:bg-primary-container/10 transition-all duration-300 ease-in-out" href="#">
+<span class="material-symbols-outlined">person</span>
+<span class="font-label-sm text-label-sm">Profile</span>
+</a>
+</nav>
+<!-- Spacer for Bottom Nav -->
+<div class="h-24"></div>
+</body></html>

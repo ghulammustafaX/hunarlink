@@ -1,0 +1,248 @@
+Γùç injected env (2) from .env // tip: Γîÿ multiple files { path: ['.env.local', '.env'] }
+Γùç injected env (0) from .env // tip: Γîÿ enable debugging { debug: true }
+Γùç injected env (0) from .env // tip: Γùê encrypted .env [www.dotenvx.com]
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+HUNARLINK ΓÇö ANTIGRAVITY PIPELINE START
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+Input: "Mujhe G-13 mein kal subah AC technician chahiye"
+User:  user_test_123
+
+[01] parse_intent INVOKED
+--- Running parse_intent ---
+Input: "Mujhe G-13 mein kal subah AC technician chahiye"
+
+Query: "G-13"
+Status: OK
+Found: G-13 at G-13, Islamabad, Pakistan
+
+Query: "G-13, Islamabad"
+Status: OK
+Found: G-13 at G-13, Islamabad, Pakistan
+     Raw Gemini response: {"service_category":"AC Technician","location":"G-13 Islamabad","time_preference":"tomorrow_morning"}
+     Γ£à Parsed successfully
+     service_category: AC Technician
+     location:         G-13 Islamabad
+     time_preference:  tomorrow_morning
+
+[02] fetch_maps_data INVOKED
+
+--- Running fetch_google_maps_data ---
+Querying: "AC Technician" near "G-13 Islamabad"
+
+Query: "G-13 Islamabad"
+Status: OK
+Found: G-13 at G-13, Islamabad, Pakistan
+
+Query: "Sector G-13, Islamabad"
+Status: OK
+Found: G-13 at G-13, Islamabad, Pakistan
+
+Query: "F-8"
+Status: OK
+Found: F-8 at F-8, Islamabad, Pakistan
+Found 10 providers
+     Found 10 providers from Google Maps
+
+[03] rank_and_select INVOKED
+
+--- Running rank_and_select ---
+
+     Rankings:
+     1. Abbasi Electric & AC Repair Center ΓÇö Score: 0.99 | 1 km | Γ¡É 4.9
+     2. Mehran Experts ΓÇö Score: 0.99 | 1.8 km | Γ¡É 4.9
+     3. Top Tech Cool Engineering ΓÇö Score: 0.95 | 1.4 km | Γ¡É 4.3
+
+     Selected: Abbasi Electric & AC Repair Center
+     Selected: Abbasi Electric & AC Repair Center
+     Score:    0.99
+     Reasoning: Closest available provider with rating 4.9
+
+[04] execute_booking INVOKED
+
+--- Running execute_booking ---
+Booking: Abbasi Electric & AC Repair Center for user user_test_123
+(node:20768) [DEP0040] DeprecationWarning: The `punycode` module is deprecated. Please use a userland alternative instead.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+
+Query: "F-8, Islamabad"
+Status: OK
+Found: F-8 at F-8, Islamabad, Pakistan
+
+Query: "Sector F-8, Islamabad"
+Status: OK
+Found: F-8 at F-8, Islamabad, Pakistan
+Γ£à Firebase write success ΓÇö booking_id: BK-1779012660628
+Γ£à Document path: active_bookings/user_test_123
+     booking_id: BK-1779012660628
+     status:     confirmed
+
+[05] schedule_followup INVOKED
+
+--- Running schedule_followup ---
+Reminder scheduled for: 2026-05-18T10:11:00.629Z
+     Reminder scheduled: 2026-05-18T10:11:00.629Z
+     Message: Reminder: Abbasi Electric & AC Repair Center arrives in 1 hour.
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+PIPELINE COMPLETE Γ£à
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+Final result: {
+  "booking_id": "BK-1779012660628",
+  "user_id": "user_test_123",
+  "status": "confirmed",
+  "provider_name": "Abbasi Electric & AC Repair Center",
+  "service_time": "10:00 AM Tomorrow",
+  "provider_distance": "1 km",
+  "provider_rating": "4.9",
+  "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+  "created_at": "2026-05-17T10:11:00.628Z",
+  "reminder_at": "2026-05-18T10:11:00.629Z"
+}
+
+-------------------------------------------
+
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+HUNARLINK ΓÇö ANTIGRAVITY PIPELINE START
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+Input: "Plumber chahiye F-8 mein aaj"
+User:  user_test_123
+
+[01] parse_intent INVOKED
+--- Running parse_intent ---
+Input: "Plumber chahiye F-8 mein aaj"
+     Raw Gemini response: {"service_category":"Plumber","location":"F-8 Islamabad","time_preference":"today"}
+     Γ£à Parsed successfully
+     service_category: Plumber
+     location:         F-8 Islamabad
+     time_preference:  today
+
+[02] fetch_maps_data INVOKED
+
+--- Running fetch_google_maps_data ---
+Querying: "Plumber" near "F-8 Islamabad"
+Found 10 providers
+     Found 10 providers from Google Maps
+
+[03] rank_and_select INVOKED
+
+--- Running rank_and_select ---
+
+     Rankings:
+     1. Home Plumber ING Service Islamabad ΓÇö Score: 1 | 1 km | Γ¡É 5
+     2. Usman Engineering & Co ΓÇö Score: 0.99 | 1.4 km | Γ¡É 4.9
+     3. Electrician & Plumber in Islamabad ΓÇö Score: 0.99 | 1.8 km | Γ¡É 4.9
+
+     Selected: Home Plumber ING Service Islamabad
+     Selected: Home Plumber ING Service Islamabad
+     Score:    1
+     Reasoning: Closest available provider with rating 5
+
+[04] execute_booking INVOKED
+
+--- Running execute_booking ---
+Booking: Home Plumber ING Service Islamabad for user user_test_123
+Γ£à Firebase write success ΓÇö booking_id: BK-1779012665476
+Γ£à Document path: active_bookings/user_test_123
+     booking_id: BK-1779012665476
+     status:     confirmed
+
+[05] schedule_followup INVOKED
+
+--- Running schedule_followup ---
+Reminder scheduled for: 2026-05-18T10:11:05.476Z
+     Reminder scheduled: 2026-05-18T10:11:05.476Z
+     Message: Reminder: Home Plumber ING Service Islamabad arrives in 1 hour.
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+PIPELINE COMPLETE Γ£à
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+Final result: {
+  "booking_id": "BK-1779012665476",
+  "user_id": "user_test_123",
+  "status": "confirmed",
+  "provider_name": "Home Plumber ING Service Islamabad",
+  "service_time": "Today",
+  "provider_distance": "1 km",
+  "provider_rating": "5",
+  "reasoning": "Selected as the closest available provider with a 5 rating.",
+  "created_at": "2026-05-17T10:11:05.476Z",
+  "reminder_at": "2026-05-18T10:11:05.476Z"
+}
+
+-------------------------------------------
+
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+HUNARLINK ΓÇö ANTIGRAVITY PIPELINE START
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+Input: "Need electrician in I-8 urgent"
+User:  user_test_123
+
+[01] parse_intent INVOKED
+--- Running parse_intent ---
+Input: "Need electrician in I-8 urgent"
+     Raw Gemini response: {"service_category":"Electrician","location":"I-8 Islamabad","time_preference":"today_urgent"}
+     Γ£à Parsed successfully
+     service_category: Electrician
+     location:         I-8 Islamabad
+     time_preference:  today_urgent
+
+[02] fetch_maps_data INVOKED
+
+--- Running fetch_google_maps_data ---
+Querying: "Electrician" near "I-8 Islamabad"
+Found 10 providers
+     Found 10 providers from Google Maps
+
+[03] rank_and_select INVOKED
+
+--- Running rank_and_select ---
+
+     Rankings:
+     1. Efi workshop mechanic electrician and me... ΓÇö Score: 0.88 | 1.4 km | Γ¡É 5
+     2. Islamabad Car AC & heater Installation ΓÇö Score: 0.88 | 1.8 km | Γ¡É 5
+     3. Kareegar Electric Works ΓÇö Score: 0.8 | 2.6 km | Γ¡É 5
+
+     Selected: Efi workshop mechanic electrician and me...
+     Selected: Efi workshop mechanic electrician and me...
+     Score:    0.88
+     Reasoning: Closest available provider with rating 5
+
+[04] execute_booking INVOKED
+
+--- Running execute_booking ---
+Booking: Efi workshop mechanic electrician and me... for user user_test_123
+Γ£à Firebase write success ΓÇö booking_id: BK-1779012668299
+Γ£à Document path: active_bookings/user_test_123
+     booking_id: BK-1779012668299
+     status:     confirmed
+
+[05] schedule_followup INVOKED
+
+--- Running schedule_followup ---
+Reminder scheduled for: 2026-05-18T10:11:08.299Z
+     Reminder scheduled: 2026-05-18T10:11:08.299Z
+     Message: Reminder: Efi workshop mechanic electrician and me... arrives in 1 hour.
+
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+PIPELINE COMPLETE Γ£à
+ΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉΓòÉ
+
+Final result: {
+  "booking_id": "BK-1779012668299",
+  "user_id": "user_test_123",
+  "status": "confirmed",
+  "provider_name": "Efi workshop mechanic electrician and me...",
+  "service_time": "Today",
+  "provider_distance": "1.4 km",
+  "provider_rating": "5",
+  "reasoning": "Selected as the closest available provider with a 5 rating.",
+  "created_at": "2026-05-17T10:11:08.299Z",
+  "reminder_at": "2026-05-18T10:11:08.299Z"
+}
+
+-------------------------------------------

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import '../services/api_service.dart';
 import 'results_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
@@ -27,6 +28,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
   final List<bool> _isCompleted = [false, false, false, false, false, false];
   int _activeStepIndex = 0;
   Timer? _timer;
+  Map<String, dynamic>? _apiResult;
 
   @override
   void initState() {
@@ -47,6 +49,20 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
     );
 
     _runPipeline();
+    _fetchBackendData();
+  }
+
+  void _fetchBackendData() async {
+    try {
+      final res = await ApiService.processRequest(widget.userInput);
+      if (mounted) {
+        setState(() {
+          _apiResult = res;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error loading backend data in ProcessingScreen: $e');
+    }
   }
 
   void _runPipeline() {
@@ -73,7 +89,9 @@ class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerPr
       if (!mounted) return;
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (_) => const ResultsScreen()),
+        MaterialPageRoute(
+          builder: (_) => ResultsScreen(apiResult: _apiResult),
+        ),
       );
     });
   }

@@ -1,5 +1,5 @@
 {
-  "name": "agent",
+  "name": "cameo",
   "version": "1.0.0",
   "description": "",
   "main": "agent.js",
@@ -8,5 +8,13 @@
   },
   "keywords": [],
   "author": "",
-  "license": "ISC"
+  "license": "ISC",
+  "type": "commonjs",
+  "dependencies": {
+    "@anthropic-ai/sdk": "^0.96.0",
+    "@google/generative-ai": "^0.24.1",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "firebase-admin": "^13.10.0"
+  }
 }

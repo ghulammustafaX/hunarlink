@@ -21,3 +21,9 @@ agent/package-lock.json
 .DS_Store
 *.log
 Thumbs.db
+
+# Firebase
+agent/serviceAccountKey*
+
+# Documentation
+docs/
