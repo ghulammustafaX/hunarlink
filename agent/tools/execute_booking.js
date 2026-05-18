@@ -15,16 +15,16 @@ const executeBooking = async (provider, userId, timePreference) => {
   const bookingId = `BK-${Date.now()}`;
 
   const payload = {
-    booking_id: bookingId,
-    user_id: userId,
-    status: 'confirmed',
-    provider_name: provider?.displayName?.text || 'Provider',
-    service_time: timePreference === 'tomorrow_morning' ? '10:00 AM Tomorrow' : 'Today',
+    booking_id:        bookingId,
+    user_id:           userId,
+    status:            'confirmed',
+    provider_name:     provider?.displayName?.text || 'Provider',
+    service_time:      timePreference === 'tomorrow_morning' ? '10:00 AM Tomorrow' : 'Today',
     provider_distance: provider?.distanceLabel || '2.1 km',
-    provider_rating: provider?.rating?.toString() || '4.5',
-    reasoning: `Selected as the closest available provider with a ${provider?.rating || 4.5} rating.`,
-    created_at: new Date().toISOString(),
-    reminder_at: new Date(Date.now() + 86400000).toISOString(),
+    provider_rating:   provider?.rating?.toString() || '4.5',
+    reasoning:         `Selected as the closest available provider with a ${provider?.rating || 4.5} rating.`,
+    created_at:        new Date().toISOString(),
+    reminder_at:       new Date(Date.now() + 86400000).toISOString(),
   };
 
   try {
