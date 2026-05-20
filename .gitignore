@@ -1,29 +1,81 @@
-# Flutter
-mobile/.dart_tool/
-mobile/build/
-mobile/*.g.dart
-mobile/android/google-services.json
-mobile/ios/GoogleService-Info.plist
-mobile/.flutter-plugins
-mobile/.flutter-plugins-dependencies
+# ═══════════════════════════════════════════════
+#   HunarLink — .gitignore
+#   NEVER commit API keys, secrets, or build files
+# ═══════════════════════════════════════════════
 
-# API Keys — NEVER commit
+# ─── API Keys & Secrets — CRITICAL ─────────────
 agent/.env
+agent/.env.*
+**/.env
+**/.env.*
 **/*.env
 **/config.secret.json
 **/google_maps_api_key*
+**/secrets.*
+**/*secret*
+**/*apikey*
+**/*api_key*
 
-# Node
+# ─── Firebase Service Account ───────────────────
+agent/serviceAccountKey.json
+agent/serviceAccountKey*
+**/serviceAccountKey*
+mobile/lib/firebase_options.dart
+mobile/android/app/google-services.json
+mobile/ios/GoogleService-Info.plist
+mobile/ios/Runner/GoogleService-Info.plist
+
+# ─── Node.js ───────────────────────────────────
 agent/node_modules/
 agent/package-lock.json
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
 
-# OS
+# ─── Flutter / Dart ────────────────────────────
+mobile/.dart_tool/
+mobile/build/
+mobile/*.g.dart
+mobile/.flutter-plugins
+mobile/.flutter-plugins-dependencies
+mobile/.packages
+mobile/pubspec.lock
+mobile/android/.gradle/
+mobile/android/local.properties
+mobile/android/app/debug.keystore
+mobile/android/app/release.keystore
+mobile/ios/.symlinks/
+mobile/ios/Pods/
+mobile/ios/Podfile.lock
+**/*.iml
+
+# ─── Trace Logs (optional — uncomment to exclude) ─
+# agent/trace_logs/
+
+# ─── OS Generated ──────────────────────────────
 .DS_Store
-*.log
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+desktop.ini
 
-# Firebase
-agent/serviceAccountKey*
+# ─── IDE / Editor ──────────────────────────────
+.vscode/
+.idea/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+*.log
 
-# Documentation
-docs/
+# ─── Build Artifacts ───────────────────────────
+dist/
+build/
+*.apk
+*.aab
+*.ipa

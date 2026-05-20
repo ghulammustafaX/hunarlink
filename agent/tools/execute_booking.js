@@ -8,7 +8,7 @@ if (!admin.apps.length) {
   });
 }
 
-const executeBooking = async (provider, userId, timePreference) => {
+const executeBooking = async (provider, userId, timePreference, serviceCategory) => {
   console.log('\n--- Running execute_booking ---');
   console.log(`Booking: ${provider?.displayName?.text} for user ${userId}`);
 
@@ -19,6 +19,7 @@ const executeBooking = async (provider, userId, timePreference) => {
     user_id:           userId,
     status:            'confirmed',
     provider_name:     provider?.displayName?.text || 'Provider',
+    service_category:  serviceCategory || 'Home Service',
     service_time:      timePreference === 'tomorrow_morning' ? '10:00 AM Tomorrow' : 'Today',
     provider_distance: provider?.distanceLabel || '2.1 km',
     provider_rating:   provider?.rating?.toString() || '4.5',
