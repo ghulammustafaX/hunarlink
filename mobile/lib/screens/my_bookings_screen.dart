@@ -20,7 +20,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color inkMid = Color(0xFF6B5E58);
   static const Color border = Color(0xFFE4D9CF);
   static const Color accent = Color(0xFF8C1616);
-  static const Color primaryTeal = Color(0xFF006053);
+  static const Color primaryTeal = Color(0xFF8C1616);
 
   @override
   Widget build(BuildContext context) {

@@ -21,8 +21,8 @@ class HunarLinkApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF006053),
-          primary: const Color(0xFF006053),
+          seedColor: const Color(0xFF8C1616),
+          primary: const Color(0xFF8C1616),
         ),
         useMaterial3: true,
         fontFamily: 'Plus Jakarta Sans',

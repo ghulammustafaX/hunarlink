@@ -17,6 +17,15 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
   bool _notificationTriggered = false;
   bool _completionNotificationTriggered = false;
 
+  static const Color bg       = Color(0xFFF7F2EA); // warm almond beige
+  static const Color surface  = Color(0xFFFFFFFF); // clean white
+  static const Color ink      = Color(0xFF1A1415); // deep charcoal
+  static const Color inkMid   = Color(0xFF6B5E58); // warm taupe
+  static const Color border   = Color(0xFFE4D9CF); // light warm border
+  static const Color accent   = Color(0xFF8C1616); // brand crimson
+  static const Color accentBg = Color(0xFFFFEBEB); // light pink-red tint
+  static const Color numGray  = Color(0xFFD4C8BC); // warm gray
+
   String _asText(dynamic value, {String fallback = ''}) {
     final text = value?.toString().trim();
     if (text == null || text.isEmpty) {
@@ -87,12 +96,6 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
   }
 
   void _showReminderBottomSheet(BuildContext context, Map<String, dynamic> booking) {
-    const Color surface = Color(0xFFFFFFFF);
-    const Color ink = Color(0xFF1A1415);
-    const Color border = Color(0xFFE4D9CF);
-    const Color accent = Color(0xFF8C1616);
-    const Color primaryTeal = Color(0xFF006053);
-
     final providerName = booking['provider_name'] ?? 'Your Provider';
     final serviceTime  = booking['service_time']  ?? 'Tomorrow, 10:00 AM';
     final reminderAt   = booking['reminder_at']   ?? '';
@@ -106,7 +109,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
       builder: (_) => Container(
         decoration: const BoxDecoration(
           color: surface,
-          borderRadius: BorderRadius.vertical(top: Radius.circular(24)),
+          borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
         ),
         padding: const EdgeInsets.fromLTRB(24, 16, 24, 40),
         child: Column(
@@ -122,30 +125,30 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                 ),
               ),
             ),
-            const SizedBox(height: 20),
+            const SizedBox(height: 24),
             Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.all(10),
+                  padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: primaryTeal.withOpacity(0.1),
+                    color: accentBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.notifications_active_rounded,
-                      color: primaryTeal, size: 22),
+                  child: const Icon(Icons.notifications_active_rounded, color: accent, size: 24),
                 ),
                 const SizedBox(width: 14),
-                Text('Reminder Details',
+                const Text(
+                  'Reminder Details',
                   style: TextStyle(
                     color: ink,
-                    fontSize: 20,
+                    fontSize: 22,
                     fontWeight: FontWeight.w900,
                     fontFamily: 'Plus Jakarta Sans',
                   ),
                 ),
               ],
             ),
-            const SizedBox(height: 24),
+            const SizedBox(height: 28),
             _reminderRow(Icons.person_outline_rounded, 'Provider', providerName),
             const Divider(height: 24, color: border),
             _reminderRow(Icons.access_time_rounded, 'Service Time', serviceTime),
@@ -160,16 +163,17 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   ? reminderAt.substring(0, 19).replaceAll('T', '  ')
                   : reminderAt),
             ],
-            const SizedBox(height: 28),
+            const SizedBox(height: 32),
             SizedBox(
               width: double.infinity,
-              height: 52,
+              height: 54,
               child: ElevatedButton.icon(
                 icon: const Icon(Icons.notifications_rounded, size: 18),
-                label: const Text('Test Notification Now',
+                label: const Text(
+                  'Test Notification Now',
                   style: TextStyle(
                     fontFamily: 'Plus Jakarta Sans',
-                    fontWeight: FontWeight.bold,
+                    fontWeight: FontWeight.w800,
                     fontSize: 15,
                   ),
                 ),
@@ -181,8 +185,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                 style: ElevatedButton.styleFrom(
                   backgroundColor: accent,
                   foregroundColor: Colors.white,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
-                  elevation: 0,
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  elevation: 1,
                 ),
               ),
             ),
@@ -193,32 +197,32 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
   }
 
   Widget _reminderRow(IconData icon, String label, String value) {
-    const Color ink = Color(0xFF1A1415);
-    const Color inkMid = Color(0xFF6B5E58);
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Icon(icon, size: 18, color: inkMid),
-        const SizedBox(width: 12),
+        Icon(icon, size: 20, color: inkMid),
+        const SizedBox(width: 14),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(label,
+              Text(
+                label,
                 style: const TextStyle(
                   color: inkMid,
                   fontSize: 11,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: FontWeight.w700,
                   letterSpacing: 0.5,
                   fontFamily: 'Plus Jakarta Sans',
                 ),
               ),
-              const SizedBox(height: 2),
-              Text(value,
+              const SizedBox(height: 3),
+              Text(
+                value,
                 style: const TextStyle(
                   color: ink,
-                  fontSize: 14,
-                  fontWeight: FontWeight.w700,
+                  fontSize: 14.5,
+                  fontWeight: FontWeight.w800,
                   fontFamily: 'Plus Jakarta Sans',
                 ),
               ),
@@ -231,19 +235,10 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // Brand Colors
-    const Color bg = Color(0xFFF7F2EA);
-    const Color surface = Color(0xFFFFFFFF);
-    const Color ink = Color(0xFF1A1415);
-    const Color inkMid = Color(0xFF6B5E58);
-    const Color border = Color(0xFFE4D9CF);
-    const Color accent = Color(0xFF8C1616);
-    const Color primaryTeal = Color(0xFF006053);
-
     // Dynamic arrival time text
     final String providerName = _asText(widget.provider['name'], fallback: 'Your Provider');
     final String arrivalTimeText = providerName == 'Zahid electrician'
-        ? 'Ali AC Services will arrive tomorrow at 10:00 AM.' // Exact mockup text string
+        ? 'Ali AC Services will arrive tomorrow at 10:00 AM.'
         : '$providerName will arrive today at 2:30 PM.';
 
     final String reminderDescription = providerName == 'Zahid electrician'
@@ -295,12 +290,19 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   Navigator.of(context).popUntil((route) => route.isFirst);
                 },
                 child: Container(
-                  width: 36,
-                  height: 36,
+                  width: 38,
+                  height: 38,
                   decoration: BoxDecoration(
                     color: surface,
-                    borderRadius: BorderRadius.circular(10),
+                    borderRadius: BorderRadius.circular(12),
                     border: Border.all(color: border),
+                    boxShadow: [
+                      BoxShadow(
+                        color: ink.withOpacity(0.04),
+                        blurRadius: 10,
+                        offset: const Offset(0, 4),
+                      )
+                    ],
                   ),
                   child: const Icon(Icons.close_rounded, color: ink, size: 18),
                 ),
@@ -311,31 +313,17 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
               text: const TextSpan(children: [
                 TextSpan(text: 'Hunar', style: TextStyle(color: accent, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
                 TextSpan(text: 'Link', style: TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
-                TextSpan(text: '  🇵🇰', style: TextStyle(fontSize: 18)),
               ]),
             ),
-            actions: const [
-              Padding(
-                padding: EdgeInsets.only(right: 16.0),
-                child: CircleAvatarWidget(
-                  radius: 20,
-                  borderWidth: 2,
-                  borderColor: border,
-                  backgroundImage: NetworkImage(
-                    'https://lh3.googleusercontent.com/aida-public/AB6AXuBChnwjrYEGK3B5gWPeF82S7_Eb6sBUR9NC4U6kw1LgFFrHEpdH5jhXtQfDA0yVUUad7xWTPqcLChU1PC1jhMh9jq3gd4kKuSCfMy-MMXuZHboV7_yzNug0ridSHnkp67ed-foWpJddQ1CFQBwV2gVWIU72FWI37z0vc1lcwwsP880hkz6DE0Zm3YqvlDsTPgTfbTYPXOP86-SZAPsGJl22AwBo1EmiVMViFYvXXGQowgIc5KX6aKXRYVBv-hvWjbIBHsZvlbIwJWY',
-                  ),
-                ),
-              )
-            ],
           ),
           body: Stack(
             children: [
-              // Background grid/confetti-like pattern decoration
+              // Background pattern decoration
               Positioned.fill(
                 child: Opacity(
                   opacity: 0.05,
                   child: CustomPaint(
-                    painter: DotsPatternPainter(color: primaryTeal),
+                    painter: DotsPatternPainter(color: accent),
                   ),
                 ),
               ),
@@ -344,121 +332,124 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   children: [
                     Expanded(
                       child: SingleChildScrollView(
+                        physics: const BouncingScrollPhysics(),
                         child: Padding(
-                          padding: const EdgeInsets.symmetric(horizontal: 20.0, vertical: 24.0),
+                          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.center,
                             children: [
-                              const SizedBox(height: 24),
-                              // Hero Animation/Icon Area (Nested Rings)
+                              const SizedBox(height: 20),
+                              // Hero Success Rings
                               Center(
                                 child: SizedBox(
-                                  width: 160,
-                                  height: 160,
+                                  width: 170,
+                                  height: 170,
                                   child: Stack(
                                     alignment: Alignment.center,
                                     children: [
-                                      // Outer Ring 2
+                                      // Outer ring 2
                                       Container(
-                                        width: 160,
-                                        height: 160,
+                                        width: 170,
+                                        height: 170,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: primaryTeal.withOpacity(0.05),
-                                            width: 2,
+                                            color: accent.withOpacity(0.05),
+                                            width: 2.5,
                                           ),
                                         ),
                                       ),
-                                      // Outer Ring 1
+                                      // Outer ring 1
                                       Container(
-                                        width: 130,
-                                        height: 130,
+                                        width: 140,
+                                        height: 140,
                                         decoration: BoxDecoration(
                                           shape: BoxShape.circle,
                                           border: Border.all(
-                                            color: primaryTeal.withOpacity(0.1),
-                                            width: 2,
+                                            color: accent.withOpacity(0.12),
+                                            width: 2.5,
                                           ),
                                         ),
                                       ),
-                                      // Colored Background Circle
+                                      // Soft glow fill
                                       Container(
-                                        width: 100,
-                                        height: 100,
+                                        width: 108,
+                                        height: 108,
                                         decoration: BoxDecoration(
-                                          color: primaryTeal.withOpacity(0.1),
+                                          color: accentBg,
                                           shape: BoxShape.circle,
                                         ),
                                       ),
-                                      // Inner Core Check Circle
+                                      // Inner active core
                                       Container(
-                                        width: 76,
-                                        height: 76,
+                                        width: 82,
+                                        height: 82,
                                         decoration: BoxDecoration(
-                                          color: isCompleted ? Colors.green : primaryTeal,
+                                          color: isCompleted ? const Color(0xFF2E7D32) : accent,
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
-                                              color: (isCompleted ? Colors.green : primaryTeal).withOpacity(0.4),
-                                              blurRadius: 20,
-                                              offset: const Offset(0, 8),
+                                              color: (isCompleted ? const Color(0xFF2E7D32) : accent).withOpacity(0.35),
+                                              blurRadius: 22,
+                                              offset: const Offset(0, 10),
                                             )
                                           ],
                                         ),
                                         child: Icon(
-                                          isCompleted ? Icons.star : Icons.check,
+                                          isCompleted ? Icons.check_circle_rounded : Icons.check_rounded,
                                           color: Colors.white,
-                                          size: 40,
+                                          size: 44,
                                         ),
                                       ),
                                     ],
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 36),
 
                               // Typography Header
                               Text(
-                                isCompleted ? "Service Completed! 🎉" : "You're all set!",
+                                isCompleted ? "Kaam Mukammal! 🎉" : "Booking Successful!",
                                 style: const TextStyle(
-                                  fontSize: 32,
-                                  fontWeight: FontWeight.w800,
-                                  color: primaryTeal,
+                                  fontSize: 28,
+                                  fontWeight: FontWeight.w900,
+                                  color: ink,
                                   letterSpacing: -0.8,
                                   fontFamily: 'Plus Jakarta Sans',
                                 ),
                               ),
                               const SizedBox(height: 12),
                               Padding(
-                                padding: const EdgeInsets.symmetric(horizontal: 24.0),
+                                padding: const EdgeInsets.symmetric(horizontal: 16.0),
                                 child: Text(
                                   resolvedArrivalText,
                                   textAlign: TextAlign.center,
                                   style: const TextStyle(
-                                    fontSize: 16,
+                                    fontSize: 15.5,
                                     color: inkMid,
                                     height: 1.5,
+                                    fontWeight: FontWeight.w600,
                                     fontFamily: 'Plus Jakarta Sans',
                                   ),
                                 ),
                               ),
-                              const SizedBox(height: 32),
+                              const SizedBox(height: 36),
 
-                              // Reminder Scheduled Card / Service Completed Card
+                              // Status Info Box
                               Container(
-                                padding: const EdgeInsets.all(16),
+                                padding: const EdgeInsets.all(18),
                                 decoration: BoxDecoration(
                                   color: isCompleted ? const Color(0xFFE8F5E9) : surface,
-                                  borderRadius: BorderRadius.circular(16),
+                                  borderRadius: BorderRadius.circular(20),
                                   border: Border.all(
-                                    color: isCompleted ? Colors.green.withOpacity(0.3) : border,
+                                    color: isCompleted ? const Color(0xFF81C784).withOpacity(0.5) : border,
+                                    width: 1,
                                   ),
                                   boxShadow: [
                                     BoxShadow(
-                                      color: primaryTeal.withOpacity(0.04),
-                                      blurRadius: 20,
-                                      offset: const Offset(0, 4),
+                                      color: ink.withOpacity(0.02),
+                                      blurRadius: 15,
+                                      offset: const Offset(0, 5),
                                     )
                                   ],
                                 ),
@@ -466,15 +457,15 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   crossAxisAlignment: CrossAxisAlignment.start,
                                   children: [
                                     Container(
-                                      padding: const EdgeInsets.all(8),
+                                      padding: const EdgeInsets.all(10),
                                       decoration: BoxDecoration(
-                                        color: isCompleted ? Colors.green.withOpacity(0.1) : primaryTeal.withOpacity(0.1),
-                                        borderRadius: BorderRadius.circular(8),
+                                        color: isCompleted ? const Color(0xFFC8E6C9) : accentBg,
+                                        borderRadius: BorderRadius.circular(10),
                                       ),
                                       child: Icon(
-                                        isCompleted ? Icons.check_circle_outline : Icons.notifications_active,
-                                        color: isCompleted ? Colors.green : primaryTeal,
-                                        size: 20,
+                                        isCompleted ? Icons.stars_rounded : Icons.notifications_active_rounded,
+                                        color: isCompleted ? const Color(0xFF2E7D32) : accent,
+                                        size: 22,
                                       ),
                                     ),
                                     const SizedBox(width: 16),
@@ -483,11 +474,11 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         children: [
                                           Text(
-                                            isCompleted ? 'Kaam Mukammal' : 'Reminder Scheduled',
+                                            isCompleted ? 'Kaam Mukammal' : 'Auto Reminder Scheduled',
                                             style: const TextStyle(
                                               color: ink,
-                                              fontWeight: FontWeight.bold,
-                                              fontSize: 14,
+                                              fontWeight: FontWeight.w800,
+                                              fontSize: 14.5,
                                               fontFamily: 'Plus Jakarta Sans',
                                             ),
                                           ),
@@ -497,7 +488,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                             style: const TextStyle(
                                               color: inkMid,
                                               fontSize: 13,
-                                              height: 1.4,
+                                              height: 1.45,
                                               fontFamily: 'Plus Jakarta Sans',
                                             ),
                                           ),
@@ -507,9 +498,9 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   ],
                                 ),
                               ),
-                              const SizedBox(height: 24),
+                              const SizedBox(height: 20),
 
-                              // Bento-style Provider Details Preview
+                              // Bento Details Block
                               Row(
                                 children: [
                                   // Provider Card
@@ -519,18 +510,17 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: surface,
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(18),
                                         border: Border.all(color: border),
+                                        boxShadow: [
+                                          BoxShadow(color: ink.withOpacity(0.015), blurRadius: 10, offset: const Offset(0, 4))
+                                        ],
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Icon(
-                                            Icons.person_pin,
-                                            color: primaryTeal,
-                                            size: 24,
-                                          ),
+                                          const Icon(Icons.person_pin_rounded, color: accent, size: 24),
                                           Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -539,7 +529,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                                 style: TextStyle(
                                                   fontSize: 9,
                                                   color: inkMid,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w800,
                                                   letterSpacing: 0.5,
                                                   fontFamily: 'Plus Jakarta Sans',
                                                 ),
@@ -549,8 +539,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                                 resolvedProviderName == 'Zahid electrician' ? 'Ali AC Services' : resolvedProviderName,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14.5,
+                                                  fontWeight: FontWeight.w800,
                                                   color: ink,
                                                   fontFamily: 'Plus Jakarta Sans',
                                                 ),
@@ -569,18 +559,17 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                       padding: const EdgeInsets.all(16),
                                       decoration: BoxDecoration(
                                         color: surface,
-                                        borderRadius: BorderRadius.circular(16),
+                                        borderRadius: BorderRadius.circular(18),
                                         border: Border.all(color: border),
+                                        boxShadow: [
+                                          BoxShadow(color: ink.withOpacity(0.015), blurRadius: 10, offset: const Offset(0, 4))
+                                        ],
                                       ),
                                       child: Column(
                                         crossAxisAlignment: CrossAxisAlignment.start,
                                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                                         children: [
-                                          const Icon(
-                                            Icons.receipt_long,
-                                            color: primaryTeal,
-                                            size: 24,
-                                          ),
+                                          const Icon(Icons.receipt_long_rounded, color: accent, size: 24),
                                           Column(
                                             crossAxisAlignment: CrossAxisAlignment.start,
                                             children: [
@@ -589,7 +578,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                                 style: TextStyle(
                                                   fontSize: 9,
                                                   color: inkMid,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontWeight: FontWeight.w800,
                                                   letterSpacing: 0.5,
                                                   fontFamily: 'Plus Jakarta Sans',
                                                 ),
@@ -598,8 +587,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                               Text(
                                                 resolvedBookingId,
                                                 style: const TextStyle(
-                                                  fontSize: 15,
-                                                  fontWeight: FontWeight.bold,
+                                                  fontSize: 14.5,
+                                                  fontWeight: FontWeight.w800,
                                                   color: ink,
                                                   fontFamily: 'Plus Jakarta Sans',
                                                 ),
@@ -612,7 +601,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 120), // Padding to avoid clipping footer buttons
+                              const SizedBox(height: 140), // spacer for footer
                             ],
                           ),
                         ),
@@ -621,20 +610,21 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   ],
                 ),
               ),
-              // Sticky Footer Actions
+              
+              // Sticky Footer Actions with smooth background fade overlay
               Positioned(
                 bottom: 0,
                 left: 0,
                 right: 0,
                 child: Container(
-                  padding: const EdgeInsets.only(top: 16, bottom: 24, left: 20, right: 20),
+                  padding: const EdgeInsets.only(top: 20, bottom: 28, left: 24, right: 24),
                   decoration: BoxDecoration(
                     gradient: LinearGradient(
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
                         bg,
-                        bg.withOpacity(0.9),
+                        bg.withOpacity(0.95),
                         Colors.transparent,
                       ],
                     ),
@@ -660,37 +650,39 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                 },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: isCompleted ? Colors.grey : accent,
+                            foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                             elevation: 2,
+                            shadowColor: accent.withOpacity(0.2),
                           ),
                           child: Text(
-                            isCompleted ? 'Service Done' : 'Complete Service (Kaam Mukammal)',
+                            isCompleted ? 'Service Completed ✓' : 'Complete Service (Kaam Mukammal)',
                             style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w855,
                               fontFamily: 'Plus Jakarta Sans',
                             ),
                           ),
                         ),
                       ),
                       const SizedBox(height: 12),
-                      // View Reminder bottom sheet button
+                      
+                      // View Reminder Button
                       if (!isCompleted && snapshot.hasData && snapshot.data!.exists)
                         Padding(
-                          padding: const EdgeInsets.only(bottom: 10),
+                          padding: const EdgeInsets.only(bottom: 12),
                           child: SizedBox(
                             width: double.infinity,
                             height: 52,
                             child: OutlinedButton.icon(
                               icon: const Icon(Icons.notifications_active_outlined, size: 18),
                               label: const Text(
-                                'View Reminder',
+                                'View Reminder Details',
                                 style: TextStyle(
                                   fontFamily: 'Plus Jakarta Sans',
-                                  fontWeight: FontWeight.bold,
+                                  fontWeight: FontWeight.w800,
                                   fontSize: 15,
                                 ),
                               ),
@@ -702,33 +694,32 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                 foregroundColor: accent,
                                 side: const BorderSide(color: accent, width: 1.5),
                                 shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(12),
+                                  borderRadius: BorderRadius.circular(14),
                                 ),
                               ),
                             ),
                           ),
                         ),
+
                       SizedBox(
                         width: double.infinity,
                         height: 56,
                         child: OutlinedButton(
                           onPressed: () {
-                            // Back to Home
                             Navigator.of(context).popUntil((route) => route.isFirst);
                           },
                           style: OutlinedButton.styleFrom(
-                            foregroundColor: accent,
-                            side: BorderSide(color: accent.withOpacity(0.2), width: 2),
+                            foregroundColor: ink,
+                            side: BorderSide(color: border, width: 1.5),
                             shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(12),
+                              borderRadius: BorderRadius.circular(16),
                             ),
                           ),
                           child: const Text(
-                            'Book Another Service',
+                            'Back to Home Screen',
                             style: TextStyle(
-                              color: accent,
-                              fontSize: 16,
-                              fontWeight: FontWeight.bold,
+                              fontSize: 15.5,
+                              fontWeight: FontWeight.w800,
                               fontFamily: 'Plus Jakarta Sans',
                             ),
                           ),
@@ -746,7 +737,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
   }
 }
 
-// Background custom painter for subtle dot confetti pattern
+// Background custom painter for subtle dots pattern
 class DotsPatternPainter extends CustomPainter {
   final Color color;
 
@@ -755,10 +746,10 @@ class DotsPatternPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final paint = Paint()
-      ..color = color.withOpacity(0.08)
+      ..color = color.withOpacity(0.04)
       ..style = PaintingStyle.fill;
 
-    const double spacing = 24.0;
+    const double spacing = 28.0;
     const double radius = 1.5;
 
     for (double x = 0; x < size.width; x += spacing) {
