@@ -16,6 +16,20 @@ const parseIntent = async (userText) => {
   if (process.env.MOCK_MODE === 'true') {
     console.log('     [MOCK MODE] Skipping Gemini API');
     const lower = userText.toLowerCase();
+    
+    // Fallback for unrecognized intent as requested
+    const known = ['plumb', 'electr', 'clean', 'carpen', 'ac', 'repair'];
+    const hasKnown = known.some(k => lower.includes(k));
+    if (!hasKnown) {
+      const mockFallback = {
+        service_category: "General Home Service",
+        location: "Islamabad",
+        time_preference: "flexible"
+      };
+      console.log(`     ✅ Mock fallback parsed:`, mockFallback);
+      return mockFallback;
+    }
+
     const mock = {
       service_category: lower.includes('plumb') ? 'Plumber'
         : lower.includes('electr') ? 'Electrician'

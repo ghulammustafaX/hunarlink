@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:speech_to_text/speech_to_text.dart';
+import 'logs_screen.dart';
 import 'processing_screen.dart';
 import 'my_bookings_screen.dart';
 
@@ -49,6 +50,7 @@ class _HomeScreenState extends State<HomeScreen> {
   final SpeechToText _speech = SpeechToText();
   bool _isListening = false;
   bool _isLocating = false;
+  bool _speechReady = false;
   String? _lastLocation;
   int _navIndex = 0;
   String _selectedLang = 'EN';
@@ -80,27 +82,70 @@ class _HomeScreenState extends State<HomeScreen> {
     super.dispose();
   }
 
-  Future<void> _startListening() async {
-    final available = await _speech.initialize();
-    if (!available) return;
-    if (_isListening) return;
+  Future<bool> _ensureSpeechReady() async {
+    if (_speechReady) return true;
+
+    final available = await _speech.initialize(
+      onStatus: (status) {
+        if (!mounted) return;
+        if (status == 'done' || status == 'notListening') {
+          setState(() => _isListening = false);
+        }
+      },
+      onError: (error) {
+        if (!mounted) return;
+        setState(() => _isListening = false);
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Voice input is unavailable: ${error.errorMsg}'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      },
+    );
+
+    if (!mounted) return false;
+    setState(() => _speechReady = available);
+
+    if (!available) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Voice input is not available on this device.'),
+          behavior: SnackBarBehavior.floating,
+        ),
+      );
+    }
+
+    return available;
+  }
+
+  Future<void> _toggleListening() async {
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+      return;
+    }
+
+    final available = await _ensureSpeechReady();
+    if (!available || !mounted) return;
+
     setState(() => _isListening = true);
-    _speech.listen(
+    await _speech.listen(
+      localeId: _localeId,
+      listenFor: const Duration(seconds: 45),
+      pauseFor: const Duration(seconds: 3),
+      partialResults: true,
+      cancelOnError: true,
+      listenMode: ListenMode.dictation,
       onResult: (result) {
+        if (!mounted) return;
         setState(() {
           _controller.text = result.recognizedWords;
+          _controller.selection = TextSelection.collapsed(offset: _controller.text.length);
         });
       },
-      localeId: _localeId,
     );
   }
-
-  void _stopListening() {
-    if (!_isListening) return;
-    _speech.stop();
-    setState(() => _isListening = false);
-  }
-
 
   Future<String?> _getUserLocation() async {
     final serviceEnabled = await Geolocator.isLocationServiceEnabled();
@@ -129,6 +174,11 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   Future<void> _search(String query, {bool useLocation = false}) async {
+    if (_isListening) {
+      await _speech.stop();
+      if (mounted) setState(() => _isListening = false);
+    }
+
     String? location;
     if (useLocation) {
       if (_lastLocation == null && !_isLocating) {
@@ -137,6 +187,7 @@ class _HomeScreenState extends State<HomeScreen> {
       location = _lastLocation;
     }
     if (!mounted) return;
+    _controller.clear();
     Navigator.push(context, MaterialPageRoute(
       builder: (_) => ProcessingScreen(userInput: query, userLocation: location),
     ));
@@ -158,26 +209,36 @@ class _HomeScreenState extends State<HomeScreen> {
             ]),
           ),
           Row(
-            children: ['EN', 'UR'].map((l) {
-              final sel = l == _selectedLang;
-              return GestureDetector(
-                onTap: () => setState(() => _selectedLang = l),
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 200),
-                  margin: const EdgeInsets.only(left: 6),
-                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                  decoration: BoxDecoration(
-                    color: sel ? accent : surface,
-                    borderRadius: BorderRadius.circular(99),
-                    border: Border.all(color: sel ? accent : border),
-                  ),
-                  child: Text(
-                    l == 'UR' ? 'اردو' : 'EN',
-                    style: TextStyle(color: sel ? Colors.white : inkMid, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Plus Jakarta Sans'),
-                  ),
+            children: [
+              IconButton(
+                tooltip: 'Agent logs',
+                icon: const Icon(Icons.history_rounded, color: accent),
+                onPressed: () => Navigator.push(
+                  context,
+                  MaterialPageRoute(builder: (_) => const LogsScreen()),
                 ),
-              );
-            }).toList(),
+              ),
+              ...['EN', 'UR'].map((l) {
+                final sel = l == _selectedLang;
+                return GestureDetector(
+                  onTap: () => setState(() => _selectedLang = l),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 200),
+                    margin: const EdgeInsets.only(left: 6),
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                    decoration: BoxDecoration(
+                      color: sel ? accent : surface,
+                      borderRadius: BorderRadius.circular(99),
+                      border: Border.all(color: sel ? accent : border),
+                    ),
+                    child: Text(
+                      l == 'UR' ? 'اردو' : 'EN',
+                      style: TextStyle(color: sel ? Colors.white : inkMid, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Plus Jakarta Sans'),
+                    ),
+                  ),
+                );
+              }),
+            ],
           ),
         ],
       ),
@@ -186,17 +247,20 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: bg,
-      body: SafeArea(
-        child: Column(
-          children: [
-            _header(),
-            Expanded(child: _buildBody()),
-          ],
+    return Directionality(
+      textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
+      child: Scaffold(
+        backgroundColor: bg,
+        body: SafeArea(
+          child: Column(
+            children: [
+              _header(),
+              Expanded(child: _buildBody()),
+            ],
+          ),
         ),
+        bottomNavigationBar: _bottomNav(),
       ),
-      bottomNavigationBar: _bottomNav(),
     );
   }
 
@@ -293,9 +357,18 @@ class _HomeScreenState extends State<HomeScreen> {
                     textDirection: isUrdu ? TextDirection.rtl : TextDirection.ltr,
                     style: const TextStyle(color: ink, fontSize: 15, fontFamily: 'Plus Jakarta Sans'),
                     maxLines: 2, minLines: 2,
+                    textInputAction: TextInputAction.search,
+                    onSubmitted: (q) {
+                      final query = q.trim();
+                      if (query.isNotEmpty) _search(query, useLocation: true);
+                    },
                     decoration: InputDecoration(
-                      hintText: t('hint'),
-                      hintStyle: const TextStyle(color: Color(0xFFAA9E96), fontSize: 14, fontFamily: 'Plus Jakarta Sans'),
+                      hintText: _isListening ? 'Listening...' : t('hint'),
+                      hintStyle: TextStyle(
+                        color: _isListening ? accent : const Color(0xFFAA9E96),
+                        fontSize: 14,
+                        fontFamily: 'Plus Jakarta Sans',
+                      ),
                       border: InputBorder.none,
                       contentPadding: const EdgeInsets.fromLTRB(20, 16, 20, 8),
                     ),
@@ -308,30 +381,33 @@ class _HomeScreenState extends State<HomeScreen> {
                         const Text('EN / اردو', style: TextStyle(color: Color(0xFFAA9E96), fontSize: 11, fontFamily: 'Plus Jakarta Sans')),
                         Row(
                           children: [
-                            GestureDetector(
-                              onLongPressStart: (_) => _startListening(),
-                              onLongPressEnd: (_) => _stopListening(),
-                              child: AnimatedContainer(
-                                duration: const Duration(milliseconds: 200),
-                                height: 42,
-                                width: 42,
-                                decoration: BoxDecoration(
-                                  color: _isListening ? accent.withOpacity(0.12) : Colors.transparent,
-                                  shape: BoxShape.circle,
-                                  boxShadow: _isListening
-                                      ? [
-                                          BoxShadow(
-                                            color: accent.withOpacity(0.35),
-                                            blurRadius: 18,
-                                            spreadRadius: 2,
-                                          ),
-                                        ]
-                                      : [],
-                                ),
-                                child: Icon(
-                                  _isListening ? Icons.mic : Icons.mic_none,
-                                  color: _isListening ? accent : accent,
-                                  size: 22,
+                            Semantics(
+                              button: true,
+                              label: _isListening ? 'Stop voice input' : 'Start voice input',
+                              child: GestureDetector(
+                                onTap: _toggleListening,
+                                child: AnimatedContainer(
+                                  duration: const Duration(milliseconds: 200),
+                                  height: 42,
+                                  width: 42,
+                                  decoration: BoxDecoration(
+                                    color: _isListening ? accent.withOpacity(0.12) : Colors.transparent,
+                                    shape: BoxShape.circle,
+                                    boxShadow: _isListening
+                                        ? [
+                                            BoxShadow(
+                                              color: accent.withOpacity(0.35),
+                                              blurRadius: 18,
+                                              spreadRadius: 2,
+                                            ),
+                                          ]
+                                        : [],
+                                  ),
+                                  child: Icon(
+                                    _isListening ? Icons.stop_rounded : Icons.mic_none,
+                                    color: accent,
+                                    size: 22,
+                                  ),
                                 ),
                               ),
                             ),
@@ -444,12 +520,10 @@ class _HomeScreenState extends State<HomeScreen> {
             width: 100, height: 100,
             decoration: BoxDecoration(
               shape: BoxShape.circle,
+              color: accentBg,
               border: Border.all(color: accent, width: 2.5),
-              image: const DecorationImage(
-                image: NetworkImage('https://lh3.googleusercontent.com/aida-public/AB6AXuDssL5c18tNaw6jcEGgNBGUjKKgoyxFBrVNDhodnPyzeNJnr7BN5lWoZZ2V7pUK-l4kfxWBwkViBd2dReHOoRMoaoFZSc3MPd2TgtAI9dqck9roxmauVaz9bOcfTNQ33aJCPA7dGPW6UK4dDXXgPGpcajStUcDsYBr8s9vDSuvExIFZJvGHqBIhss3VUH_1ns00s1DDdzgZOHikbNsAA9jbt5m7JsQRz0MqsZGfJTIUNZD8WRXIUFWLZBviRCH_fvCghb8_g5roNUM'),
-                fit: BoxFit.cover,
-              ),
             ),
+            child: const Icon(Icons.person_rounded, color: accent, size: 56),
           ),
           Positioned(bottom: 0, right: 0, child: Container(
             padding: const EdgeInsets.all(3),
@@ -473,7 +547,14 @@ class _HomeScreenState extends State<HomeScreen> {
         ),
         const SizedBox(height: 16),
         OutlinedButton(
-          onPressed: () {},
+          onPressed: () {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Account settings are currently locked by the developer team.'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          },
           style: OutlinedButton.styleFrom(
             side: const BorderSide(color: accent),
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),

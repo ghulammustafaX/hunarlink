@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'package:flutter/material.dart';
 import '../services/api_service.dart';
 import 'results_screen.dart';
@@ -17,14 +18,20 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
   late Animation<double> _pulse;
   late Animation<double> _fadeIn;
 
-  static const Color bg      = Color(0xFFF7F2EA);
-  static const Color surface = Color(0xFFFFFFFF);
-  static const Color ink     = Color(0xFF1A1415);
-  static const Color inkMid  = Color(0xFF6B5E58);
-  static const Color border  = Color(0xFFE4D9CF);
-  static const Color accent  = Color(0xFF8C1616);
-  static const Color numGray = Color(0xFFD4C8BC);
+  // ── Design tokens ──────────────────────────────────────────────────
+  static const Color bg       = Color(0xFFF7F2EA);
+  static const Color surface  = Color(0xFFFFFFFF);
+  static const Color ink      = Color(0xFF1A1415);
+  static const Color inkMid   = Color(0xFF6B5E58);
+  static const Color border   = Color(0xFFE4D9CF);
+  static const Color accent   = Color(0xFF8C1616);
+  static const Color numGray  = Color(0xFFD4C8BC);
+  static const Color consoleBg = Color(0xFF0A0E1A);
+  static const Color neonGreen = Color(0xFF00FF87);
+  static const Color warnYellow = Color(0xFFFFF3CD);
+  static const Color warnBorder = Color(0xFFFFD600);
 
+  // ── Step definitions ───────────────────────────────────────────────
   final List<String> _steps = [
     'Understanding your request...',
     'Detecting language & intent',
@@ -36,9 +43,17 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
   final List<bool> _done = [false, false, false, false, false, false];
   int _active = 0;
   Timer? _timer;
-  bool _apiDone = false;
-  bool _animDone = false;
+
+  // ── API state ──────────────────────────────────────────────────────
+  bool _apiDone    = false;
+  bool _animDone   = false;
   Map<String, dynamic>? _apiResult;
+
+  // ── New: trace + radius expansion state ───────────────────────────
+  List<dynamic> _traces       = [];
+  bool   _radiusExpanded      = false;
+  bool   _readyToProceed      = false;
+  String _agentTraceJson      = '';
 
   @override
   void initState() {
@@ -57,9 +72,24 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
         widget.userInput,
         location: widget.userLocation,
       );
-      if (mounted) { setState(() { _apiResult = res; _apiDone = true; }); _tryNav(); }
+      if (mounted) {
+        setState(() {
+          _apiResult = res;
+          _apiDone   = true;
+          // Extract traces and radiusExpanded from response
+          if (res != null) {
+            _traces         = res['traces'] as List<dynamic>? ?? [];
+            _radiusExpanded = res['radiusExpanded'] == true;
+            _agentTraceJson = const JsonEncoder.withIndent('  ').convert(_traces);
+          }
+        });
+        _tryFinish();
+      }
     } catch (_) {
-      if (mounted) { setState(() => _apiDone = true); _tryNav(); }
+      if (mounted) {
+        setState(() => _apiDone = true);
+        _tryFinish();
+      }
     }
   }
 
@@ -68,30 +98,22 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
       if (!mounted) return;
       setState(() {
         if (_active < _steps.length) { _done[_active] = true; _active++; }
-        if (_active >= _steps.length) { t.cancel(); _animDone = true; _tryNav(); }
+        if (_active >= _steps.length) { t.cancel(); _animDone = true; _tryFinish(); }
       });
     });
   }
 
-  void _tryNav() {
+  void _tryFinish() {
     if (!_animDone || !_apiDone) return;
-    Future.delayed(const Duration(milliseconds: 300), () {
+    // Auto-navigate to ResultsScreen once both API and animation are done
+    if (!mounted) return;
+    Future.delayed(const Duration(milliseconds: 400), () {
       if (!mounted) return;
-      if (_apiResult != null) {
-        Navigator.pushReplacement(context, PageRouteBuilder(
-          pageBuilder: (_, a, __) => ResultsScreen(apiResult: _apiResult),
-          transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
-          transitionDuration: const Duration(milliseconds: 350),
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: const Text('Could not reach server. Check your connection.'),
-          backgroundColor: accent,
-          behavior: SnackBarBehavior.floating,
-          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-        ));
-        Navigator.pop(context);
-      }
+      Navigator.pushReplacement(context, PageRouteBuilder(
+        pageBuilder: (_, a, __) => ResultsScreen(apiResult: _apiResult),
+        transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+        transitionDuration: const Duration(milliseconds: 400),
+      ));
     });
   }
 
@@ -103,6 +125,7 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
     super.dispose();
   }
 
+  // ── Build ──────────────────────────────────────────────────────────
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -110,12 +133,13 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
       body: FadeTransition(
         opacity: _fadeIn,
         child: SafeArea(
-          child: Padding(
+          child: SingleChildScrollView(
+            physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.symmetric(horizontal: 24),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Header
+                // ── Header ─────────────────────────────────────────
                 const SizedBox(height: 20),
                 RichText(text: const TextSpan(children: [
                   TextSpan(text: 'Hunar', style: TextStyle(color: accent, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
@@ -124,35 +148,58 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
                 ])),
                 const SizedBox(height: 40),
 
-                // Pulsing icon
+                // ── Pulsing logo ───────────────────────────────────
                 Center(
                   child: AnimatedBuilder(
                     animation: _pulse,
                     builder: (_, __) => Stack(alignment: Alignment.center, children: [
+                      // Outer pulse ring
                       Transform.scale(
                         scale: _pulse.value,
                         child: Container(
-                          width: 80, height: 80,
-                          decoration: BoxDecoration(shape: BoxShape.circle, color: accent.withAlpha(15)),
+                          width: 96, height: 96,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: accent.withAlpha(12),
+                          ),
                         ),
                       ),
+                      // Logo container with round white bg
                       Container(
-                        width: 64, height: 64,
+                        width: 72, height: 72,
                         decoration: BoxDecoration(
-                          shape: BoxShape.circle, color: surface,
+                          shape: BoxShape.circle,
+                          color: Colors.white,
                           border: Border.all(color: border, width: 1.5),
-                          boxShadow: [BoxShadow(color: ink.withAlpha(10), blurRadius: 16)],
+                          boxShadow: [
+                            BoxShadow(
+                              color: accent.withAlpha(30),
+                              blurRadius: 20,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
                         ),
-                        child: const Icon(Icons.auto_awesome_rounded, color: accent, size: 28),
+                        child: ClipOval(
+                          child: Padding(
+                            padding: const EdgeInsets.all(10),
+                            child: Image.asset(
+                              'assets/images/logo.png',
+                              fit: BoxFit.contain,
+                            ),
+                          ),
+                        ),
                       ),
                     ]),
                   ),
                 ),
                 const SizedBox(height: 32),
 
-                // Title
-                const Center(
-                  child: Text('Finding your provider...', style: TextStyle(color: ink, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Plus Jakarta Sans')),
+                // ── Title ──────────────────────────────────────────
+                Center(
+                  child: Text(
+                    'Finding your provider...',
+                    style: const TextStyle(color: ink, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Plus Jakarta Sans'),
+                  ),
                 ),
                 const SizedBox(height: 6),
                 Center(
@@ -163,9 +210,13 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
                     style: const TextStyle(color: inkMid, fontSize: 13, fontStyle: FontStyle.italic, fontFamily: 'Plus Jakarta Sans'),
                   ),
                 ),
-                const SizedBox(height: 40),
+                const SizedBox(height: 28),
 
-                // Steps card
+                // ── Radius Expansion Banner ────────────────────────
+                if (_radiusExpanded)
+                  _buildRadiusBanner(),
+
+                // ── Steps card ─────────────────────────────────────
                 Container(
                   decoration: BoxDecoration(
                     color: surface, borderRadius: BorderRadius.circular(16),
@@ -202,18 +253,29 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
                               fontSize: 13.5, fontWeight: completed || isActive ? FontWeight.w600 : FontWeight.normal,
                               fontFamily: 'Plus Jakarta Sans',
                             ))),
-                            if (isActive) SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: accent)),
+                            if (isActive && !_readyToProceed)
+                              SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: accent)),
                           ]),
                         ),
                       );
                     }),
                   ),
                 ),
+                const SizedBox(height: 20),
 
-                const Spacer(),
-                Center(child: Text('Powered by Gemini 2.5 Flash · Google Places',
-                  style: TextStyle(color: numGray, fontSize: 11, fontFamily: 'Plus Jakarta Sans'))),
-                const SizedBox(height: 24),
+                // ── Agent Trace ExpansionTile ───────────────────────
+                if (_traces.isNotEmpty)
+                  _buildAgentTraceTile(),
+
+                // ── Footer ─────────────────────────────────────────
+                const SizedBox(height: 12),
+                Center(
+                  child: Text(
+                    'Powered by Gemini 2.5 Flash · Google Places',
+                    style: TextStyle(color: numGray, fontSize: 11, fontFamily: 'Plus Jakarta Sans'),
+                  ),
+                ),
+                const SizedBox(height: 32),
               ],
             ),
           ),
@@ -221,4 +283,88 @@ class _ProcessingScreenState extends State<ProcessingScreen> with TickerProvider
       ),
     );
   }
+
+  // ── Radius Expansion Banner ────────────────────────────────────────
+  Widget _buildRadiusBanner() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+        decoration: BoxDecoration(
+          color: warnYellow,
+          borderRadius: BorderRadius.circular(12),
+          border: Border.all(color: warnBorder.withOpacity(0.6), width: 1.2),
+        ),
+        child: Row(
+          children: [
+            const Text('🔍', style: TextStyle(fontSize: 18)),
+            const SizedBox(width: 10),
+            const Expanded(
+              child: Text(
+                'No providers found nearby.\nExpanding search radius to 10km...',
+                style: TextStyle(
+                  fontSize: 12.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF5C4200),
+                  fontFamily: 'Plus Jakarta Sans',
+                  height: 1.5,
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── Agent Trace Panel ──────────────────────────────────────────────
+  Widget _buildAgentTraceTile() {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 16),
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(14),
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            backgroundColor: consoleBg,
+            collapsedBackgroundColor: consoleBg,
+            tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            title: Row(
+              children: const [
+                Text('🤖', style: TextStyle(fontSize: 16)),
+                SizedBox(width: 8),
+                Text(
+                  'Agent Trace',
+                  style: TextStyle(
+                    color: Color(0xFF60A5FA),
+                    fontSize: 14,
+                    fontWeight: FontWeight.w800,
+                    fontFamily: 'Plus Jakarta Sans',
+                  ),
+                ),
+              ],
+            ),
+            trailing: const Icon(Icons.expand_more_rounded, color: Color(0xFF60A5FA)),
+            children: [
+              Container(
+                width: double.infinity,
+                color: consoleBg,
+                padding: const EdgeInsets.fromLTRB(14, 0, 14, 16),
+                child: SelectableText(
+                  _agentTraceJson,
+                  style: const TextStyle(
+                    fontFamily: 'monospace',
+                    color: neonGreen,
+                    fontSize: 10.5,
+                    height: 1.6,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
 }

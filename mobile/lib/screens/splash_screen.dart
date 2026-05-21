@@ -46,7 +46,7 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
     _logoRotate = Tween<double>(begin: -0.2, end: 0.0).animate(
       CurvedAnimation(
         parent: _logoController,
-        curve: const Interval(0.2, 0.9, curve: Curves.backOut),
+        curve: const Interval(0.2, 0.9, curve: Curves.easeOutBack),
       ),
     );
 
@@ -171,7 +171,14 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                         ),
                       );
                     },
-                    child: const HunarLinkLogoWidget(),
+                    child: SizedBox(
+                      width: 140,
+                      height: 140,
+                      child: Image.asset(
+                        'assets/icon/app_icon.png',
+                        fit: BoxFit.contain,
+                      ),
+                    ),
                   ),
                   
                   const SizedBox(height: 32),
@@ -276,16 +283,6 @@ class _SplashScreenState extends State<SplashScreen> with TickerProviderStateMix
                           ),
                         ),
                         const SizedBox(height: 24),
-                        const Text(
-                          'Google Antigravity Hackathon 2026',
-                          style: TextStyle(
-                            color: Color(0xFFD4C8BC),
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 2.0,
-                            fontFamily: 'Plus Jakarta Sans',
-                          ),
-                        ),
                       ],
                     ),
                   ),

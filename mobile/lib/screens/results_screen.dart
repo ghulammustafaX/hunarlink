@@ -22,7 +22,29 @@ class ResultsScreen extends StatelessWidget {
     return text;
   }
 
+  // ── Price estimates by rank position ──────────────────────────────────
+  static const List<String> _priceEstimates = ['Rs. 1,200', 'Rs. 950', 'Rs. 1,500'];
+
   List<Map<String, dynamic>> _providers() {
+    final intent = apiResult?['data']?['intent'];
+    final serviceCategory = intent is Map ? intent['service_category'] : null;
+    final timePreference = intent is Map ? intent['time_preference'] : null;
+
+    // ── Use live ranked[] from API if available ────────────────────────
+    final rawRanked = apiResult?['data']?['ranked'];
+    if (rawRanked is List && rawRanked.isNotEmpty) {
+      return rawRanked.asMap().entries.map((e) {
+        final i = e.key;
+        final p = Map<String, dynamic>.from(e.value as Map);
+        // Inject a price estimate (not from API — simulated)
+        p['price'] = i < _priceEstimates.length ? _priceEstimates[i] : 'Rs. 1,000';
+        p['service_category'] ??= serviceCategory;
+        p['time_preference'] ??= timePreference;
+        return p;
+      }).toList();
+    }
+
+    // ── Fallback: build from selected + 2 static entries ──────────────
     final fallback = [
       {'name': 'Zahid Electrician',    'distance': '2.1 km', 'rating': '4.8', 'price': 'Rs. 1,200', 'best': true,  'reasoning': 'Closest with highest rating in your area.'},
       {'name': 'Imran Repair Services','distance': '4.5 km', 'rating': '4.6', 'price': 'Rs. 950',   'best': false, 'reasoning': 'Reliable option at a lower price.'},
@@ -34,12 +56,16 @@ class ResultsScreen extends StatelessWidget {
       final reasoning = s['reasoning'] ?? apiResult!['data']['reasoning'] ?? 'Selected by HunarLink AI based on distance & rating.';
       return [
         {
-          'name': s['name'] ?? 'Zahid Electrician',
-          'distance': s['distance'] ?? '2.1 km',
-          'rating': s['rating']?.toString() ?? '4.8',
-          'price': 'Rs. 1,200',
-          'best': true,
-          'reasoning': reasoning
+          'name':      s['name']             ?? 'Zahid Electrician',
+          'distance':  s['distance']         ?? '2.1 km',
+          'rating':    s['rating']?.toString() ?? '4.8',
+          'score':     s['score'],
+          'address':   s['address']          ?? '',
+          'price':     'Rs. 1,200',
+          'best':      true,
+          'service_category': serviceCategory,
+          'time_preference': timePreference,
+          'reasoning': reasoning,
         },
         ...fallback.where((p) => p['best'] != true),
       ];
@@ -368,6 +394,29 @@ class ResultsScreen extends StatelessWidget {
                                   fontFamily: 'Plus Jakarta Sans',
                                 ),
                               ),
+                              // AI Score badge — shown only when real data available
+                              if (p['score'] != null) ...[
+                                const SizedBox(width: 10),
+                                Container(
+                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                                  decoration: BoxDecoration(
+                                    color: isBest ? accentBg : const Color(0xFFF0EDE8),
+                                    borderRadius: BorderRadius.circular(8),
+                                    border: Border.all(
+                                      color: isBest ? accent.withOpacity(0.25) : border,
+                                    ),
+                                  ),
+                                  child: Text(
+                                    'AI ${p['score']}',
+                                    style: TextStyle(
+                                      color: isBest ? accent : inkMid,
+                                      fontSize: 10,
+                                      fontWeight: FontWeight.w800,
+                                      fontFamily: 'Plus Jakarta Sans',
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ],
                           ),
                         ],

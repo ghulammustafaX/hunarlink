@@ -195,6 +195,93 @@ The system MUST demonstrate:
 
 ---
 
+### 3.8 Agentic Workflow Evidence (Judges)
+This section is the judge-facing, step-by-step evidence of how the agent refines
+the request, calls Google Places, ranks providers, and executes booking.
+
+**Step 1: User Request (Raw Input)**
+```
+Mujhe G-13 mein kal subah AC technician chahiye
+```
+
+**Step 2: Gemini Intent Refinement (`parse_intent`)**
+```json
+{
+  "service_category": "AC Technician",
+  "location": "G-13 Islamabad",
+  "time_preference": "tomorrow_morning"
+}
+```
+
+**Step 3: Google Places Search (`fetch_maps_data`)**
+Query constructed by the agent:
+```
+AC repair near G-13 Islamabad
+```
+
+Sample results returned (trimmed to key fields):
+```json
+[
+  {"name": "Abbasi Electric & AC Repair Center", "rating": 4.9, "distance_km": 1.0},
+  {"name": "Ali AC Services", "rating": 4.8, "distance_km": 2.1},
+  {"name": "Khan Cooling Works", "rating": 4.5, "distance_km": 3.4}
+]
+```
+
+**Step 4: Ranking + Selection (`rank_and_select`)**
+Score formula used (from section 3.3):
+```
+Score = (0.40 × proximity_score) + (0.35 × rating_score) + (0.25 × availability_score)
+```
+
+Example ranked output (top 3):
+```json
+{
+  "ranked": [
+    {"name": "Abbasi Electric & AC Repair Center", "score": 0.99, "best_match": true},
+    {"name": "Ali AC Services", "score": 0.91, "best_match": false},
+    {"name": "Khan Cooling Works", "score": 0.76, "best_match": false}
+  ],
+  "selected": {"name": "Abbasi Electric & AC Repair Center", "score": 0.99},
+  "reasoning": "Selected as the closest available provider with a 4.9 rating."
+}
+```
+
+**Step 5: Booking Simulation (`execute_booking`)**
+Booking payload written to Firestore:
+```json
+{
+  "booking_id": "BK-1779016287619",
+  "user_id": "user_001",
+  "status": "confirmed",
+  "provider_name": "Abbasi Electric & AC Repair Center",
+  "service_category": "AC Technician",
+  "service_time": "10:00 AM Tomorrow",
+  "provider_distance": "1 km",
+  "provider_rating": "4.9",
+  "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+  "created_at": "ISO timestamp",
+  "reminder_at": "ISO timestamp"
+}
+```
+
+**Step 6: Follow-Up (`schedule_followup`)**
+```json
+{
+  "booking_id": "BK-1779016287619",
+  "trigger_at": "ISO timestamp",
+  "message": "Reminder: Abbasi Electric & AC Repair Center arrives in 1 hour.",
+  "status": "reminder_scheduled"
+}
+```
+
+**Judge Verification Artifacts**
+- `agent/trace_logs/trace_001.txt` must include all 5 tool steps in order.
+- Each block must follow the JSON format defined in section 3.7.
+- The trace file is the single most important proof of agent reasoning.
+
+---
+
 ## 4. Mandatory Google Antigravity Requirements
 
 | Requirement | Implementation | Verification |

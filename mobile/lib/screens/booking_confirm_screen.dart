@@ -24,6 +24,26 @@ class BookingConfirmScreen extends StatelessWidget {
     return text;
   }
 
+  String _serviceTimeFromPreference(String preference) {
+    switch (preference) {
+      case 'today_urgent':
+        return 'ASAP Today';
+      case 'today_evening':
+        return 'Today Evening';
+      case 'today':
+        return 'Today';
+      case 'tomorrow_morning':
+        return 'Tomorrow Morning';
+      case 'tomorrow_evening':
+        return 'Tomorrow Evening';
+      case 'weekend':
+        return 'This Weekend';
+      case 'flexible':
+      default:
+        return 'Flexible';
+    }
+  }
+
   Widget _avatarFallback(String providerName, Color borderColor) {
     return Container(
       color: const Color(0xFFF0E8E0),
@@ -47,11 +67,12 @@ class BookingConfirmScreen extends StatelessWidget {
     final String providerDistance = _asText(provider['distance'], fallback: '2.1 km');
     final String providerRating = _asText(provider['rating'], fallback: '4.8');
     final String providerReasoning = _asText(provider['reasoning'], fallback: 'Selected by HunarLink AI.');
-    
-    // Choose dynamic service time based on provider details
-    final String serviceTimeText = providerName.toLowerCase().contains('zahid') 
-        ? 'Today, 2:30 PM' 
-        : 'Tomorrow, 10:00 AM';
+    final String serviceCategory = _asText(provider['service_category'], fallback: 'Home Service');
+    final String timePreference = _asText(provider['time_preference'], fallback: 'flexible');
+    final String serviceTimeText = _asText(
+      provider['service_time'],
+      fallback: _serviceTimeFromPreference(timePreference),
+    );
 
     return Scaffold(
       backgroundColor: bg,
@@ -212,13 +233,13 @@ class BookingConfirmScreen extends StatelessWidget {
                                       Container(
                                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                                         decoration: BoxDecoration(
-                                          color: accentBg,
+                                          color: const Color(0xFFE8F5E9),
                                           borderRadius: BorderRadius.circular(6),
                                         ),
                                         child: const Text(
                                           'VERIFIED',
                                           style: TextStyle(
-                                            color: accent,
+                                            color: Color(0xFF2E7D32),
                                             fontSize: 9,
                                             fontWeight: FontWeight.w900,
                                             letterSpacing: 0.5,
@@ -278,7 +299,7 @@ class BookingConfirmScreen extends StatelessWidget {
                               children: [
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.all(14),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                     decoration: BoxDecoration(
                                       color: bg.withOpacity(0.5),
                                       borderRadius: BorderRadius.circular(16),
@@ -290,14 +311,17 @@ class BookingConfirmScreen extends StatelessWidget {
                                         Row(
                                           children: const [
                                             Icon(Icons.calendar_month_rounded, color: accent, size: 16),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              'Service Time',
-                                              style: TextStyle(
-                                                color: inkMid,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                fontFamily: 'Plus Jakarta Sans',
+                                            SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                'Service Time',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: inkMid,
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -307,7 +331,7 @@ class BookingConfirmScreen extends StatelessWidget {
                                           serviceTimeText,
                                           style: const TextStyle(
                                             color: ink,
-                                            fontSize: 14,
+                                            fontSize: 13.5,
                                             fontWeight: FontWeight.w800,
                                             fontFamily: 'Plus Jakarta Sans',
                                           ),
@@ -316,10 +340,10 @@ class BookingConfirmScreen extends StatelessWidget {
                                     ),
                                   ),
                                 ),
-                                const SizedBox(width: 12),
+                                const SizedBox(width: 10),
                                 Expanded(
                                   child: Container(
-                                    padding: const EdgeInsets.all(14),
+                                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
                                     decoration: BoxDecoration(
                                       color: bg.withOpacity(0.5),
                                       borderRadius: BorderRadius.circular(16),
@@ -331,14 +355,17 @@ class BookingConfirmScreen extends StatelessWidget {
                                         Row(
                                           children: const [
                                             Icon(Icons.payments_rounded, color: accent, size: 16),
-                                            SizedBox(width: 6),
-                                            Text(
-                                              'Payment Mode',
-                                              style: TextStyle(
-                                                color: inkMid,
-                                                fontSize: 12,
-                                                fontWeight: FontWeight.w700,
-                                                fontFamily: 'Plus Jakarta Sans',
+                                            SizedBox(width: 4),
+                                            Expanded(
+                                              child: Text(
+                                                'Payment Mode',
+                                                overflow: TextOverflow.ellipsis,
+                                                style: TextStyle(
+                                                  color: inkMid,
+                                                  fontSize: 11.5,
+                                                  fontWeight: FontWeight.w700,
+                                                  fontFamily: 'Plus Jakarta Sans',
+                                                ),
                                               ),
                                             ),
                                           ],
@@ -348,7 +375,7 @@ class BookingConfirmScreen extends StatelessWidget {
                                           'Cash on Service',
                                           style: TextStyle(
                                             color: ink,
-                                            fontSize: 14,
+                                            fontSize: 13.5,
                                             fontWeight: FontWeight.w800,
                                             fontFamily: 'Plus Jakarta Sans',
                                           ),
@@ -416,6 +443,8 @@ class BookingConfirmScreen extends StatelessWidget {
                                     'user_id': 'user_mustafa_001',
                                     'status': 'confirmed',
                                     'provider_name': providerName,
+                                    'service_category': serviceCategory,
+                                    'time_preference': timePreference,
                                     'service_time': serviceTimeText,
                                     'provider_distance': providerDistance,
                                     'provider_rating': providerRating,
@@ -438,6 +467,9 @@ class BookingConfirmScreen extends StatelessWidget {
                                         'distance': providerDistance,
                                         'rating': providerRating,
                                         'reasoning': providerReasoning,
+                                        'booking_id': bookingPayload['booking_id'],
+                                        'booking_doc_id': bookingPayload['booking_id'],
+                                        'service_time': serviceTimeText,
                                       }),
                                     ),
                                   );
