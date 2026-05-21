@@ -1,0 +1,9 @@
+{
+  "name": "hunarlink",
+  "version": "1.0.0",
+  "description": "HunarLink Root Workspace",
+  "scripts": {
+    "build": "cd agent && npm install",
+    "start": "cd agent && node server.js"
+  }
+}
