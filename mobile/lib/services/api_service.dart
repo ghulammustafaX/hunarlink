@@ -62,7 +62,9 @@ class ApiService {
           Uri.parse(url),
           headers: {'Content-Type': 'application/json'},
           body: jsonEncode(payload),
-        ).timeout(const Duration(seconds: 30)); // §8.3 — 30 second timeout
+        ).timeout(const Duration(seconds: 90)); // Extended for Gemini+Places+Firebase pipeline
+
+        debugPrint('📡 [ApiService] $url → ${response.statusCode}');
 
         if (response.statusCode == 200) {
           final decoded = jsonDecode(response.body);
@@ -71,6 +73,7 @@ class ApiService {
           }
         }
       } catch (e) {
+        debugPrint('❌ [ApiService] Failed: $url → $e');
         // Fallback silently to the next endpoint to ensure offline resiliency
       }
     }
@@ -90,7 +93,7 @@ class ApiService {
         final healthUrl = url.replaceAll('/request', '/health');
         final response = await http.get(
           Uri.parse(healthUrl),
-        ).timeout(const Duration(seconds: 5));
+        ).timeout(const Duration(seconds: 10));
         if (response.statusCode == 200) {
           return true;
         }
