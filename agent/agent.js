@@ -15,10 +15,22 @@ const saveLogsToFirebase = async (context, userId) => {
   const admin = require('firebase-admin');
 
   if (!admin.apps.length) {
-    const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      try {
+        const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        });
+      } catch (e) {
+        console.warn('⚠️ Firebase not initialized: missing FIREBASE_SERVICE_ACCOUNT or serviceAccountKey.json');
+        return { log_id: `LOG-MOCK-${Date.now()}` }; // Return mock log in case it can't save
+      }
+    }
   }
 
   const db = admin.firestore();

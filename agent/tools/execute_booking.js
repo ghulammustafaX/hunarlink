@@ -1,20 +1,28 @@
 const admin = require('firebase-admin');
 
-if (!admin.apps.length) {
-  // Works both locally (file) and on Railway (env variable)
-  if (process.env.FIREBASE_SERVICE_ACCOUNT) {
-    const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
-  } else {
-    const path = require('path');
-    const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+let dbInitialized = false;
+
+const initFirebase = () => {
+  if (!admin.apps.length && !dbInitialized) {
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      try {
+        const path = require('path');
+        const serviceAccount = require(path.join(__dirname, '../serviceAccountKey.json'));
+        admin.initializeApp({
+          credential: admin.credential.cert(serviceAccount),
+        });
+      } catch (e) {
+        console.warn('⚠️ Firebase not initialized: missing FIREBASE_SERVICE_ACCOUNT or serviceAccountKey.json');
+      }
+    }
+    dbInitialized = true;
   }
-}
+};
 
 const executeBooking = async (provider, userId, timePreference, serviceCategory) => {
   console.log('\n--- Running execute_booking ---');
@@ -57,6 +65,8 @@ const executeBooking = async (provider, userId, timePreference, serviceCategory)
   };
 
   try {
+    initFirebase();
+    if (!admin.apps.length) throw new Error('Firebase not initialized');
     const db = admin.firestore();
     await db
       .collection('active_bookings')
