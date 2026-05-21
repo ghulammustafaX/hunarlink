@@ -212,10 +212,10 @@ Our Antigravity traces prove real agentic reasoning and orchestration:
 
 ### Firebase Integration
 
-- `StreamBuilder` in `BookingSuccessScreen` listens to `active_bookings/{userId}`
-- UI auto-updates when Firestore document changes: `confirmed` → `completed`
-- Completion triggers star icon swap, green theme, and completion push notification
-- `MyBookingsScreen` also streams the active booking in real-time
+*   **Real-time Listeners:** `StreamBuilder` in `BookingSuccessScreen` listens to `active_bookings/{userId}`.
+*   **Automatic UI updates:** UI auto-updates when Firestore document status transitions: `confirmed` → `completed`.
+*   **Interactive Themes:** Completion triggers star icon swap, green theme, and local completion push notification.
+*   **Agent Auditing Logs:** Every execution writes detailed model information, ranking formulas, precision metrics, and final provider outcomes to the `agent_logs` collection for historical observability.
 
 ---
 
@@ -245,6 +245,7 @@ Our Antigravity traces prove real agentic reasoning and orchestration:
 
 ## 📄 Firebase Schema
 
+### 1. Active Bookings (`active_bookings` collection)
 ```
 active_bookings/
 └── {userId}/
@@ -259,6 +260,24 @@ active_bookings/
     ├── reasoning         String   "Selected as closest available provider..."
     ├── created_at        String   ISO timestamp
     └── reminder_at       String   ISO timestamp (24hrs after booking)
+```
+
+### 2. Agent Execution Logs (`agent_logs` collection)
+```
+agent_logs/
+└── {logId}/
+    ├── accuracy_metrics
+    │   ├── mock_mode           Boolean  false
+    │   ├── model_used          String   "gemini-2.5-flash"
+    │   ├── radius_expanded     Boolean  true
+    │   ├── ranking_formula     String   "0.40xproximity + 0.35xrating + 0.25xavailability"
+    │   ├── top_score           Number   0.88
+    │   └── total_providers_found Number 8
+    └── final_result
+        ├── booking_id          String   "BK-1779363837587"
+        ├── location            String   "33.6583967,73.0590818"
+        ├── provider_distance   String   "1.9 km"
+        └── provider_rating     Number   5
 ```
 
 ---
