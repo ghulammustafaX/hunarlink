@@ -4,16 +4,12 @@ import 'package:http/http.dart' as http;
 
 /// ApiService handles all backend and LLM agent interactions for HunarLink.
 class ApiService {
-  // Production server URL on Railway
-  static const String baseUrl = 'https://hunarlink-production.up.railway.app/';
-
   // Replace with the developer's actual IPv4 address when testing on physical devices (same Wi-Fi)
   // Run 'ipconfig' (Windows) or 'ifconfig' (macOS/Linux) to find it.
   static const String developerIp = '192.168.18.45';
 
   // Adaptive development base endpoints supporting physical devices, host machine, and emulator loopbacks.
   static const List<String> endpoints = [
-    '${baseUrl}request',
     'http://192.168.18.45:3000/request', // Physical device test IP (Change to your PC's IP)
     'http://10.0.2.2:3000/request',      // Android emulator default
     'http://localhost:3000/request',     // iOS simulator, web & desktop default

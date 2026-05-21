@@ -188,8 +188,15 @@ app.use((req, res) => {
   });
 });
 
-// ✅ Correct - use Railway's PORT
-const PORT = process.env.PORT || 8080;
+// ── START SERVER ─────────────────────────────────────────
+const PORT = process.env.PORT || 3000;
 app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
+  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+  console.log('   🚀 HunarLink API Server Started');
+  console.log(`   📡 URL     : http://localhost:${PORT}`);
+  console.log(`   ❤️  Health  : http://localhost:${PORT}/health`);
+  console.log(`   📬 Request : POST http://localhost:${PORT}/request`);
+  console.log(`   🤖 Mode    : ${process.env.MOCK_MODE === 'true' ? 'MOCK (Gemini bypassed)' : 'LIVE (Gemini active)'}`);
+  console.log(`   🧠 Model   : ${process.env.GEMINI_MODEL || 'gemini-2.5-flash'}`);
+  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
 });
