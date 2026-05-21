@@ -57,11 +57,11 @@ And HunarLink:
 │       → BookingConfirmScreen → BookingSuccessScreen              │
 │              MyBookingsScreen  |  ReminderScreen (Bottom Sheet)  │
 └─────────────────────────────┬────────────────────────────────────┘
-                              │  POST /request  (30s timeout)
+                              │  POST /request  (90s timeout)
                               ▼
 ┌──────────────────────────────────────────────────────────────────┐
-│               Node.js + Express API Server                       │
-│                     localhost:3000                               │
+│           Node.js + Express API Production Server                │
+│         https://hunarlink-production.up.railway.app              │
 │         GET /health  ·  POST /request                            │
 └─────────────────────────────┬────────────────────────────────────┘
                               │  antigravityAgent.run()
@@ -263,6 +263,25 @@ active_bookings/
 
 ---
 
+## 🚀 Live Production & Resiliency Upgrades
+
+We have deployed the backend server live to production and made several updates to ensure it is robust, resilient, and ready for judging:
+
+### 1. Backend Production Deployment (Railway)
+*   **Production API URL:** `https://hunarlink-production.up.railway.app/request`
+*   **Healthcheck URL:** `https://hunarlink-production.up.railway.app/health`
+*   **Railway Binding Configuration:** Configured the express server to listen on `0.0.0.0` and correctly bind to the Railway target networking port (`8080`).
+
+### 2. Resilient Firebase Initialization Fallback
+*   In local development, the server uses a physical `serviceAccountKey.json` credentials file.
+*   For cloud deployment, we implemented a fallback that loads the credentials dynamically from the `FIREBASE_SERVICE_ACCOUNT_KEY` environment variable as a raw JSON string. If this is unavailable, it gracefully logs warning messages, ensuring the build never crashes the server container.
+
+### 3. Flutter Network & Connectivity Fixes
+*   **Internet Access:** Added `<uses-permission android:name="android.permission.INTERNET"/>` inside `AndroidManifest.xml` to allow the mobile app to communicate with the live production backend.
+*   **Extended Request Timeout:** Since the complete agentic pipeline (Gemini Intent Parsing → Google Places API Discovery → Google Distance Matrix API Calculation → Firebase Firestore writes) can take up to 20-30 seconds, we extended the mobile app's API request timeout from `30 seconds` to `90 seconds` to avoid premature timeouts.
+*   **Dynamic Endpoint Failover:** Rewrote the endpoints configuration to use a runtime getter, prioritizing the live Railway URL while cleanly falling back to local IPs/emulators when offline.
+
+---
 
 ## ⚠️ Assumptions & Limitations
 
