@@ -10,10 +10,17 @@ const getFirestore = () => {
   const admin = require('firebase-admin');
 
   if (!admin.apps.length) {
-    const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
-    admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount),
-    });
+    if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+      const serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    } else {
+      const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount),
+      });
+    }
   }
 
   return admin.firestore();
@@ -181,15 +188,8 @@ app.use((req, res) => {
   });
 });
 
-// ── START SERVER ─────────────────────────────────────────
-const PORT = process.env.PORT || 3000;
+// ✅ Correct - use Railway's PORT
+const PORT = process.env.PORT || 8080;
 app.listen(PORT, () => {
-  console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
-  console.log('   🚀 HunarLink API Server Started');
-  console.log(`   📡 URL     : http://localhost:${PORT}`);
-  console.log(`   ❤️  Health  : http://localhost:${PORT}/health`);
-  console.log(`   📬 Request : POST http://localhost:${PORT}/request`);
-  console.log(`   🤖 Mode    : ${process.env.MOCK_MODE === 'true' ? 'MOCK (Gemini bypassed)' : 'LIVE (Gemini active)'}`);
-  console.log(`   🧠 Model   : ${process.env.GEMINI_MODEL || 'gemini-2.5-flash'}`);
-  console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n');
+  console.log(`Server running on port ${PORT}`);
 });
