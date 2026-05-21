@@ -8,14 +8,14 @@ class ApiService {
   // Run 'ipconfig' (Windows) or 'ifconfig' (macOS/Linux) to find it.
   static const String developerIp = '192.168.18.45';
 
-  static const String baseUrl = 'https://hunarlink-production.up.railway.app/';
+  static const String baseUrl = 'https://hunarlink-production.up.railway.app';
 
-  // Adaptive development base endpoints supporting physical devices, host machine, and emulator loopbacks.
-  static const List<String> endpoints = [
-    '${baseUrl}request',
-    'http://192.168.18.45:3000/request', // Physical device test IP (Change to your PC's IP)
-    'http://10.0.2.2:3000/request',      // Android emulator default
-    'http://localhost:3000/request',     // iOS simulator, web & desktop default
+  // Endpoint list — Railway production URL is always first priority
+  static List<String> get endpoints => [
+    '$baseUrl/request',                  // ✅ Production (Railway)
+    'http://192.168.18.45:3000/request', // Local PC (same Wi-Fi)
+    'http://10.0.2.2:3000/request',      // Android emulator
+    'http://localhost:3000/request',     // iOS/desktop
   ];
 
   /// Shows a user-friendly SnackBar error message.
@@ -86,22 +86,16 @@ class ApiService {
   }
 
   /// Checks if the backend server is reachable and healthy.
-  /// Calls GET /health as per §8.3 spec requirement.
   static Future<bool> checkHealth() async {
-    for (final url in endpoints) {
-      try {
-        final healthUrl = url.replaceAll('/request', '/health');
-        final response = await http.get(
-          Uri.parse(healthUrl),
-        ).timeout(const Duration(seconds: 10));
-        if (response.statusCode == 200) {
-          return true;
-        }
-      } catch (e) {
-        // Fallback silently
-      }
+    try {
+      final response = await http.get(
+        Uri.parse('$baseUrl/health'),
+      ).timeout(const Duration(seconds: 10));
+      return response.statusCode == 200;
+    } catch (e) {
+      debugPrint('❌ [ApiService] Health check failed: $e');
+      return false;
     }
-    return false;
   }
 }
 
