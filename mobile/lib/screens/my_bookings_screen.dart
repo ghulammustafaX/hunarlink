@@ -19,21 +19,25 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   static const Color ink = Color(0xFF1A1415);
   static const Color inkMid = Color(0xFF6B5E58);
   static const Color border = Color(0xFFE4D9CF);
-  static const Color accent = Color(0xFF8C1616);
-  static const Color primaryTeal = Color(0xFF8C1616);
 
   @override
   Widget build(BuildContext context) {
     const String userId = 'user_mustafa_001';
 
-    Widget body = StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseService.bookingStream(userId),
+    Widget body = StreamBuilder<QuerySnapshot>(
+      stream: FirebaseService.userBookingsStream(userId),
       builder: (context, snapshot) {
-        final hasActive = snapshot.hasData && snapshot.data != null && snapshot.data!.exists;
-        Map<String, dynamic>? activeBooking;
-        if (hasActive) {
-          activeBooking = snapshot.data!.data() as Map<String, dynamic>?;
-        }
+        final bookings = (snapshot.data?.docs ?? []).map((doc) {
+          final data = doc.data() as Map<String, dynamic>;
+          return {'_doc_id': doc.id, ...data};
+        }).toList()
+          ..sort((a, b) => (b['created_at'] ?? '').toString().compareTo((a['created_at'] ?? '').toString()));
+        final activeBookings = bookings
+            .where((b) => (b['status'] ?? 'confirmed').toString().toLowerCase() != 'completed')
+            .toList();
+        final completedBookings = bookings
+            .where((b) => (b['status'] ?? '').toString().toLowerCase() == 'completed')
+            .toList();
 
         return SingleChildScrollView(
           physics: const BouncingScrollPhysics(),
@@ -77,8 +81,11 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
               const SizedBox(height: 12),
 
-              if (hasActive && activeBooking != null) ...[
-                _activeBookingCard(activeBooking),
+              if (activeBookings.isNotEmpty) ...[
+                ...activeBookings.map((booking) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _activeBookingCard(booking),
+                )),
               ] else ...[
                 Container(
                   width: double.infinity,
@@ -118,25 +125,40 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ),
               const SizedBox(height: 12),
 
-              _pastBookingCard(
-                name: 'Zahid Electrician',
-                service: 'AC & Fan Specialist',
-                status: 'CONFIRMED',
-                statusColor: primaryTeal,
-                price: 'Rs. 1,200',
-                time: 'Yesterday, 2:30 PM',
-                id: 'BK-940291',
-              ),
-              const SizedBox(height: 12),
-              _pastBookingCard(
-                name: 'Ali Deep Cleaning',
-                service: 'Full House Wash',
-                status: 'COMPLETED',
-                statusColor: Colors.green,
-                price: 'Rs. 3,500',
-                time: '12 May, 11:00 AM',
-                id: 'BK-829104',
-              ),
+              if (completedBookings.isNotEmpty) ...[
+                ...completedBookings.map((booking) => Padding(
+                  padding: const EdgeInsets.only(bottom: 12),
+                  child: _pastBookingCard(
+                    name: booking['provider_name'] ?? 'Provider',
+                    service: booking['service_category'] ?? 'Home Service',
+                    status: (booking['status'] ?? 'completed').toString().toUpperCase(),
+                    statusTextColor: const Color(0xFF81C784),
+                    statusBgColor: const Color(0xFFE8F5E9),
+                    price: 'Rs. --',
+                    time: booking['service_time'] ?? 'Flexible',
+                    id: booking['booking_id'] ?? booking['_doc_id'] ?? '',
+                  ),
+                )),
+              ] else ...[
+                Container(
+                  width: double.infinity,
+                  padding: const EdgeInsets.all(18),
+                  decoration: BoxDecoration(
+                    color: surface,
+                    borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
+                  ),
+                  child: const Text(
+                    'Completed bookings will appear here.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: inkMid,
+                      fontSize: 13,
+                      fontFamily: 'Plus Jakarta Sans',
+                    ),
+                  ),
+                ),
+              ],
             ],
           ),
         );
@@ -164,7 +186,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
   Widget _activeBookingCard(Map<String, dynamic> booking) {
     final status = (booking['status'] ?? 'confirmed').toString().toUpperCase();
     final isCompleted = status == 'COMPLETED';
-    final statusColor = isCompleted ? Colors.green : primaryTeal;
+    final Color badgeTextColor = isCompleted ? const Color(0xFF81C784) : const Color(0xFFFFB300);
+    final Color badgeBgColor = isCompleted ? const Color(0xFFE8F5E9).withOpacity(0.15) : const Color(0xFFFFF8E1).withOpacity(0.15);
 
     return GestureDetector(
       onTap: () {
@@ -174,6 +197,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             builder: (_) => BookingSuccessScreen(
               provider: {
                 'displayName': {'text': booking['provider_name'] ?? 'Provider'},
+                'name': booking['provider_name'] ?? 'Provider',
+                'booking_id': booking['booking_id'] ?? booking['_doc_id'],
+                'booking_doc_id': booking['_doc_id'],
+                'service_time': booking['service_time'],
                 'formattedAddress': booking['provider_address'] ?? 'Islamabad',
                 'rating': double.tryParse(booking['provider_rating']?.toString() ?? '4.5') ?? 4.5,
               },
@@ -184,14 +211,14 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
       child: Container(
         padding: const EdgeInsets.all(20),
         decoration: BoxDecoration(
-          color: surface,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: isCompleted ? border : primaryTeal, width: 2),
+          color: const Color(0xFF1E1B1A), // premium deep off-black background from screen styles
+          borderRadius: BorderRadius.circular(24),
+          border: Border.all(color: const Color(0xFF332E2D), width: 1.5),
           boxShadow: [
             BoxShadow(
-              color: isCompleted ? ink.withOpacity(0.05) : primaryTeal.withOpacity(0.1),
-              blurRadius: 12,
-              offset: const Offset(0, 4),
+              color: Colors.black.withOpacity(0.2),
+              blurRadius: 16,
+              offset: const Offset(0, 8),
             )
           ],
         ),
@@ -207,7 +234,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       Text(
                         booking['provider_name'] ?? 'Provider',
                         style: const TextStyle(
-                          color: ink,
+                          color: Colors.white,
                           fontWeight: FontWeight.w900,
                           fontSize: 18,
                           fontFamily: 'Plus Jakarta Sans',
@@ -216,7 +243,7 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                       Text(
                         booking['service_category'] ?? 'Home Service',
                         style: const TextStyle(
-                          color: inkMid,
+                          color: Color(0xFFD4C8BC),
                           fontSize: 13,
                           fontFamily: 'Plus Jakarta Sans',
                         ),
@@ -227,13 +254,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
                   decoration: BoxDecoration(
-                    color: statusColor.withOpacity(0.1),
+                    color: badgeBgColor,
                     borderRadius: BorderRadius.circular(99),
                   ),
                   child: Text(
                     status,
                     style: TextStyle(
-                      color: statusColor,
+                      color: badgeTextColor,
                       fontSize: 10,
                       fontWeight: FontWeight.w900,
                       fontFamily: 'Plus Jakarta Sans',
@@ -243,19 +270,19 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               ],
             ),
             const SizedBox(height: 16),
-            const Divider(height: 1, color: border),
+            const Divider(height: 1, color: Color(0xFF332E2D)),
             const SizedBox(height: 16),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
                   children: [
-                    const Icon(Icons.access_time_rounded, size: 16, color: accent),
+                    const Icon(Icons.access_time_rounded, size: 16, color: Color(0xFFE57373)),
                     const SizedBox(width: 6),
                     Text(
                       booking['service_time'] ?? 'Today',
                       style: const TextStyle(
-                        color: accent,
+                        color: Color(0xFFE57373),
                         fontSize: 13,
                         fontWeight: FontWeight.w700,
                         fontFamily: 'Plus Jakarta Sans',
@@ -265,12 +292,12 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                 ),
                 Row(
                   children: [
-                    const Icon(Icons.location_on_outlined, size: 16, color: inkMid),
+                    const Icon(Icons.location_on_outlined, size: 16, color: Color(0xFFD4C8BC)),
                     const SizedBox(width: 4),
                     Text(
                       booking['provider_distance'] ?? '2.1 km',
                       style: const TextStyle(
-                        color: inkMid,
+                        color: Color(0xFFD4C8BC),
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
                         fontFamily: 'Plus Jakarta Sans',
@@ -283,10 +310,10 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
             const SizedBox(height: 12),
             Container(
               width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               decoration: BoxDecoration(
-                color: bg,
-                borderRadius: BorderRadius.circular(8),
+                color: const Color(0xFF2C2224),
+                borderRadius: BorderRadius.circular(10),
               ),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -294,13 +321,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
                   Text(
                     'Tap to view tracking & details',
                     style: TextStyle(
-                      color: primaryTeal,
-                      fontSize: 11,
+                      color: Color(0xFFE57373),
+                      fontSize: 11.5,
                       fontWeight: FontWeight.bold,
                       fontFamily: 'Plus Jakarta Sans',
                     ),
                   ),
-                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: primaryTeal),
+                  Icon(Icons.arrow_forward_ios_rounded, size: 10, color: Color(0xFFE57373)),
                 ],
               ),
             ),
@@ -314,7 +341,8 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
     required String name,
     required String service,
     required String status,
-    required Color statusColor,
+    required Color statusTextColor,
+    required Color statusBgColor,
     required String price,
     required String time,
     required String id,
@@ -364,13 +392,13 @@ class _MyBookingsScreenState extends State<MyBookingsScreen> {
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: statusColor.withOpacity(0.1),
+                  color: statusBgColor,
                   borderRadius: BorderRadius.circular(99),
                 ),
                 child: Text(
                   status,
                   style: TextStyle(
-                    color: statusColor,
+                    color: statusTextColor,
                     fontSize: 10,
                     fontWeight: FontWeight.w700,
                     fontFamily: 'Plus Jakarta Sans',

@@ -14,6 +14,17 @@ const fetchMapsData = async (serviceCategory, location) => {
 
   // ─── MOCK MODE ─────────────────────────────────────────────────────────────
   if (process.env.MOCK_MODE === 'true') {
+    const locLower = (location || '').toLowerCase();
+    
+    // DHA check or non-standard check to trigger empty -> radius expansion simulation
+    const isStandardSector = ['g-13', 'g13', 'f-11', 'f11', 'g-14', 'g14', 'i-10', 'i10', 'f-8', 'f8', 'i-8', 'i8'].some(s => locLower.includes(s));
+    let radiusExpanded = false;
+    
+    if (!isStandardSector || locLower.includes('dha') || locLower.includes('bahria')) {
+      console.log('No providers found — expanding radius to 10km');
+      radiusExpanded = true;
+    }
+
     console.log('     [MOCK MODE] Returning mock provider dataset with GPS distances');
     const mockProviders = [
       { displayName: { text: 'Abbasi Electric & AC Repair' }, formattedAddress: '124, G-13/4, Islamabad', rating: 4.9, userRatingCount: 132, location: { latitude: 33.6938, longitude: 73.0156 } },
@@ -24,6 +35,9 @@ const fetchMapsData = async (serviceCategory, location) => {
     ];
     // In mock mode, use real GPS distances via Distance Matrix if key available
     const withDistance = await attachDistances(mockProviders, location);
+    if (radiusExpanded) {
+      withDistance.forEach(p => p.radiusExpanded = true);
+    }
     console.log(`Found ${withDistance.length} mock providers`);
     return withDistance;
   }
@@ -36,22 +50,33 @@ const fetchMapsData = async (serviceCategory, location) => {
   }
 
   const url = 'https://places.googleapis.com/v1/places:searchText';
-  const response = await fetch(url, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': placesKey,
-      // location field needed for Distance Matrix lat/lng extraction
-      'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.location',
-    },
-    body: JSON.stringify({
-      textQuery: `${serviceCategory} near ${location}`,
-      maxResultCount: 10,
-    }),
-  });
+  const makeSearch = async (queryText) => {
+    return await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-Goog-Api-Key': placesKey,
+        'X-Goog-FieldMask': 'places.displayName,places.formattedAddress,places.rating,places.userRatingCount,places.location',
+      },
+      body: JSON.stringify({
+        textQuery: queryText,
+        maxResultCount: 10,
+      }),
+    });
+  };
 
-  const data = await response.json();
-  const places = data.places || [];
+  let response = await makeSearch(`${serviceCategory} near ${location}`);
+  let data = await response.json();
+  let places = data.places || [];
+  let radiusExpanded = false;
+
+  if (places.length === 0) {
+    console.log('No providers found — expanding radius to 10km');
+    radiusExpanded = true;
+    response = await makeSearch(`${serviceCategory} near Islamabad`);
+    data = await response.json();
+    places = data.places || [];
+  }
 
   if (places.length === 0) {
     console.warn('⚠️  No providers found from Places API');
@@ -60,6 +85,9 @@ const fetchMapsData = async (serviceCategory, location) => {
 
   // ─── Attach real GPS distances via Distance Matrix API ──────────────────────
   const withDistance = await attachDistances(places, location);
+  if (radiusExpanded) {
+    withDistance.forEach(p => p.radiusExpanded = true);
+  }
   console.log(`Found ${withDistance.length} providers with real GPS distances`);
   return withDistance;
 };

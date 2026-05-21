@@ -9,6 +9,67 @@ const { fetchMapsData }    = require('./tools/fetch_maps_data');
 const { rankAndSelect }    = require('./tools/rank_and_select');
 const { executeBooking }   = require('./tools/execute_booking');
 const { scheduleFollowup } = require('./tools/schedule_followup');
+const path = require('path');
+
+const saveLogsToFirebase = async (context, userId) => {
+  const admin = require('firebase-admin');
+
+  if (!admin.apps.length) {
+    const serviceAccount = require(path.join(__dirname, 'serviceAccountKey.json'));
+    admin.initializeApp({
+      credential: admin.credential.cert(serviceAccount),
+    });
+  }
+
+  const db = admin.firestore();
+
+  const cleanForFirestore = (value) => {
+    if (value === undefined) return null;
+    if (value === null) return null;
+    if (Array.isArray(value)) return value.map(cleanForFirestore);
+    if (typeof value === 'object') {
+      return Object.fromEntries(
+        Object.entries(value).map(([key, val]) => [key, cleanForFirestore(val)])
+      );
+    }
+    return value;
+  };
+
+  const logEntry = cleanForFirestore({
+    log_id: `LOG-${Date.now()}`,
+    user_id: userId,
+    timestamp: new Date().toISOString(),
+    input: context.input,
+    language_detected: context.intent?.language || 'auto',
+    pipeline_steps: context.traces,
+    final_result: {
+      service_category: context.intent?.service_category,
+      location: context.intent?.location,
+      time_preference: context.intent?.time_preference,
+      selected_provider: context.selected?.displayName?.text,
+      provider_score: context.selected?.score,
+      provider_distance: context.selected?.distanceLabel,
+      provider_rating: context.selected?.rating,
+      booking_id: context.booking?.booking_id,
+      status: context.booking?.status,
+    },
+    accuracy_metrics: {
+      total_providers_found: context.providers?.length || 0,
+      top_score: context.selected?.score,
+      ranking_formula: '0.40xproximity + 0.35xrating + 0.25xavailability',
+      radius_expanded: context.radiusExpanded || false,
+      mock_mode: process.env.MOCK_MODE === 'true',
+      model_used: process.env.GEMINI_MODEL || 'gemini-2.5-flash',
+    },
+    pipeline_duration_ms: context.traces?.reduce(
+      (sum, t) => sum + (t.duration_ms || 0), 0
+    ),
+  });
+
+  await db.collection('agent_logs').add(logEntry);
+  console.log(`✅ Log saved: ${logEntry.log_id}`);
+  return logEntry;
+};
 
 const agent = {
   name: "HunarLinkOrchestrator",
@@ -76,6 +137,18 @@ const agent = {
       toolMap[t.name] = t;
     }
 
+    const finalizeRun = async () => {
+      try {
+        const logEntry = await saveLogsToFirebase(context, userId);
+        context.log_id = logEntry.log_id;
+      } catch (err) {
+        context.log_error = err.message;
+        console.error(`❌ Failed to save agent log: ${err.message}`);
+      }
+
+      return context;
+    };
+
     // Step 1: parse_intent
     {
       const start = Date.now();
@@ -114,7 +187,7 @@ const agent = {
       console.log(`\n◇ [Trace Event] Step 1`);
       console.log(JSON.stringify(trace, null, 2));
 
-      if (status === "failed") return context;
+      if (status === "failed") return await finalizeRun();
     }
 
     // Step 2: fetch_maps_data
@@ -134,6 +207,9 @@ const agent = {
         if (!providers || providers.length === 0) {
           status = "failed";
           reasoning = "No providers found in Google Maps.";
+        } else if (providers.some(p => p.radiusExpanded)) {
+          context.radiusExpanded = true;
+          reasoning += " No providers found nearby — expanding radius to 10km.";
         }
       } catch (err) {
         status = "failed";
@@ -158,7 +234,7 @@ const agent = {
       console.log(`\n◇ [Trace Event] Step 2`);
       console.log(JSON.stringify(trace, null, 2));
 
-      if (status === "failed") return context;
+      if (status === "failed") return await finalizeRun();
     }
 
     // Step 3: rank_and_select
@@ -175,6 +251,7 @@ const agent = {
           time_preference: context.intent.time_preference
         });
         context.selected = result.selected;
+        context.ranked   = result.ranked;          // ← top-3 array for Flutter
         context.ranking_reasoning = result.reasoning;  // capture reasoning
         if (!result.selected) {
           status = "failed";
@@ -208,7 +285,7 @@ const agent = {
       console.log(`\n◇ [Trace Event] Step 3`);
       console.log(JSON.stringify(trace, null, 2));
 
-      if (status === "failed") return context;
+      if (status === "failed") return await finalizeRun();
     }
 
     // Step 4: execute_booking
@@ -217,7 +294,7 @@ const agent = {
       const toolObj = toolMap['execute_booking'];
       let booking = null;
       let status = "success";
-      let reasoning = `Simulating booking execution. Writing confirmation document to active_bookings/${context.userId}.`;
+      let reasoning = `Simulating booking execution. Writing confirmation document to active_bookings/{booking_id}.`;
 
       try {
         booking = await toolObj.execute({
@@ -254,7 +331,7 @@ const agent = {
       console.log(`\n◇ [Trace Event] Step 4`);
       console.log(JSON.stringify(trace, null, 2));
 
-      if (status === "failed") return context;
+      if (status === "failed") return await finalizeRun();
     }
 
     // Step 5: schedule_followup
@@ -295,7 +372,7 @@ const agent = {
     console.log(`🤖 AGENT RUN COMPLETE`);
     console.log(`==================================================\n`);
 
-    return context;
+    return await finalizeRun();
   }
 };
 
@@ -307,3 +384,4 @@ const runHunarLinkPipeline = async (userInput, userId = 'user_test_123') => {
 
 module.exports = agent;
 module.exports.runHunarLinkPipeline = runHunarLinkPipeline;
+module.exports.saveLogsToFirebase = saveLogsToFirebase;

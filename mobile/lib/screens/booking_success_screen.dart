@@ -25,6 +25,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
   static const Color accent   = Color(0xFF8C1616); // brand crimson
   static const Color accentBg = Color(0xFFFFEBEB); // light pink-red tint
   static const Color numGray  = Color(0xFFD4C8BC); // warm gray
+  static const Color softSuccess = Color(0xFF81C784);
 
   String _asText(dynamic value, {String fallback = ''}) {
     final text = value?.toString().trim();
@@ -97,7 +98,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
 
   void _showReminderBottomSheet(BuildContext context, Map<String, dynamic> booking) {
     final providerName = booking['provider_name'] ?? 'Your Provider';
-    final serviceTime  = booking['service_time']  ?? 'Tomorrow, 10:00 AM';
+    final serviceTime  = booking['service_time']  ?? 'Flexible';
     final reminderAt   = booking['reminder_at']   ?? '';
     final bookingId    = booking['booking_id']    ?? '#KAI-29402';
     final reasoning    = booking['reasoning']     ?? 'Selected as the best match.';
@@ -233,47 +234,216 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
     );
   }
 
+  // ── Visual Booking Status Timeline ──────────────────────────────────
+  Widget _buildStatusTimeline(AsyncSnapshot<DocumentSnapshot> snapshot) {
+    // Derive real time strings from booking data
+    String receivedTime  = '';
+    String providersTime = '';
+    String matchTime     = '';
+    String confirmedTime = '';
+    String serviceTime   = '';
+    String reminderTime  = '';
+
+    if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
+      final booking = snapshot.data!.data() as Map<String, dynamic>;
+      final rawCreated = booking['created_at']?.toString() ?? '';
+      final rawService = booking['service_time']?.toString() ?? 'Flexible';
+      final rawReminder = booking['reminder_at']?.toString() ?? '';
+
+      // Parse created_at → hh:mm AM/PM
+      if (rawCreated.isNotEmpty) {
+        try {
+          final dt = DateTime.parse(rawCreated);
+          final h  = dt.toLocal().hour;
+          final m  = dt.toLocal().minute.toString().padLeft(2, '0');
+          final period = h >= 12 ? 'PM' : 'AM';
+          final hr = h > 12 ? h - 12 : (h == 0 ? 12 : h);
+          final stamp = '$hr:$m $period';
+          receivedTime  = stamp;
+          providersTime = stamp;
+          matchTime     = stamp;
+          confirmedTime = stamp;
+        } catch (_) {}
+      }
+      serviceTime  = rawService;
+      reminderTime = rawReminder.length > 16
+          ? rawReminder.substring(0, 16).replaceAll('T', '  ')
+          : rawReminder;
+    }
+
+    final bool isCompleted = snapshot.hasData
+      && snapshot.data != null
+      && snapshot.data!.exists
+      && ((snapshot.data!.data() as Map<String, dynamic>)['status'] == 'completed');
+
+    const Color timelineGreen  = softSuccess;
+    const Color timelinePending = Color(0xFF9E9E9E);
+
+    final List<_TimelineStep> steps = [
+      _TimelineStep(icon: Icons.inbox_rounded,           label: 'Request Received',    time: receivedTime,  color: timelineGreen),
+      _TimelineStep(icon: Icons.person_search_rounded,   label: 'Providers Found',     time: providersTime, color: timelineGreen),
+      _TimelineStep(icon: Icons.auto_awesome_rounded,    label: 'Best Match Selected', time: matchTime,     color: timelineGreen),
+      _TimelineStep(icon: Icons.receipt_long_rounded,    label: 'Booking Confirmed',   time: confirmedTime, color: timelineGreen),
+      _TimelineStep(icon: Icons.access_time_rounded,     label: 'Service Scheduled',   time: serviceTime,   color: isCompleted ? timelineGreen : timelinePending),
+      _TimelineStep(icon: Icons.notifications_active_rounded, label: 'Reminder Set',   time: reminderTime,  color: isCompleted ? timelineGreen : timelinePending),
+    ];
+
+    return Container(
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: border),
+        boxShadow: [
+          BoxShadow(color: ink.withOpacity(0.02), blurRadius: 15, offset: const Offset(0, 5)),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: accentBg,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: const Icon(Icons.timeline_rounded, color: accent, size: 18),
+              ),
+              const SizedBox(width: 12),
+              const Text(
+                'Booking Timeline',
+                style: TextStyle(
+                  color: ink,
+                  fontSize: 14,
+                  fontWeight: FontWeight.w900,
+                  fontFamily: 'Plus Jakarta Sans',
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 18),
+          ...List.generate(steps.length, (i) {
+            final step = steps[i];
+            final isLast = i == steps.length - 1;
+            return IntrinsicHeight(
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  // Icon circle + connector column
+                  SizedBox(
+                    width: 36,
+                    child: Column(
+                      children: [
+                        Container(
+                          width: 32,
+                          height: 32,
+                          decoration: BoxDecoration(
+                            shape: BoxShape.circle,
+                            color: step.color.withOpacity(0.12),
+                            border: Border.all(
+                              color: step.color.withOpacity(0.35),
+                              width: 1.2,
+                            ),
+                          ),
+                          child: Icon(
+                            step.icon,
+                            color: step.color,
+                            size: 15,
+                          ),
+                        ),
+                        if (!isLast)
+                          Expanded(
+                            child: Center(
+                              child: Container(
+                                width: 1.5,
+                                margin: const EdgeInsets.symmetric(vertical: 3),
+                                color: border,
+                              ),
+                            ),
+                          ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 12),
+                  // Label + time
+                  Expanded(
+                    child: Padding(
+                      padding: EdgeInsets.only(bottom: isLast ? 0 : 16, top: 6),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            step.label,
+                            style: TextStyle(
+                              color: step.color,
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              fontFamily: 'Plus Jakarta Sans',
+                            ),
+                          ),
+                          if (step.time.isNotEmpty) ...[
+                            const SizedBox(height: 3),
+                            Text(
+                              step.time,
+                              style: const TextStyle(
+                                color: inkMid,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                                fontFamily: 'Plus Jakarta Sans',
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            );
+          }),
+        ],
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    // Dynamic arrival time text
     final String providerName = _asText(widget.provider['name'], fallback: 'Your Provider');
-    final String arrivalTimeText = providerName == 'Zahid electrician'
-        ? 'Ali AC Services will arrive tomorrow at 10:00 AM.'
-        : '$providerName will arrive today at 2:30 PM.';
-
-    final String reminderDescription = providerName == 'Zahid electrician'
-        ? "We'll notify you at 9:00 AM tomorrow so you're ready for the visit."
-        : "We'll notify you 1 hour before so you're ready for the visit.";
+    final String fallbackBookingId = _asText(widget.provider['booking_id']);
+    final String fallbackBookingDocId = _asText(widget.provider['booking_doc_id'], fallback: fallbackBookingId);
+    final String fallbackServiceTime = _asText(widget.provider['service_time'], fallback: 'Flexible');
+    final String arrivalTimeText = '$providerName will arrive at $fallbackServiceTime.';
+    const String reminderDescription = "We'll notify you 1 hour before so you're ready for the visit.";
 
     return StreamBuilder<DocumentSnapshot>(
-      stream: FirebaseService.bookingStream('user_mustafa_001'),
+      stream: fallbackBookingDocId.isNotEmpty
+          ? FirebaseService.bookingStreamById(fallbackBookingDocId)
+          : FirebaseService.latestBookingStream('user_mustafa_001'),
       builder: (context, snapshot) {
         bool isCompleted = false;
         String resolvedProviderName = providerName;
-        String resolvedBookingId = '#KAI-29402';
+        String resolvedBookingId = fallbackBookingId.isNotEmpty ? fallbackBookingId : '#KAI-29402';
         String resolvedArrivalText = arrivalTimeText;
         String resolvedReminderDesc = reminderDescription;
-        String userId = 'user_mustafa_001';
+        String bookingDocId = resolvedBookingId;
 
         if (snapshot.hasData && snapshot.data != null && snapshot.data!.exists) {
           final booking = snapshot.data!.data() as Map<String, dynamic>;
           isCompleted = booking['status'] == 'completed';
           resolvedProviderName = booking['provider_name'] ?? providerName;
           resolvedBookingId = booking['booking_id'] ?? '#KAI-29402';
-          userId = booking['user_id'] ?? 'user_mustafa_001';
-          final serviceTime = booking['service_time'] ?? 'Tomorrow, 10:00 AM';
+          bookingDocId = snapshot.data!.id;
+          final serviceTime = booking['service_time'] ?? fallbackServiceTime;
 
           if (isCompleted) {
             resolvedArrivalText = '$resolvedProviderName has completed your service. Thank you for choosing HunarLink!';
             resolvedReminderDesc = 'Service finished. Feedback and rating are active.';
             _showCompletionNotification('$resolvedProviderName has finished the job successfully.');
           } else {
-            resolvedArrivalText = resolvedProviderName == 'Zahid electrician' || resolvedProviderName == 'Ali AC Services'
-                ? 'Ali AC Services will arrive tomorrow at 10:00 AM.'
-                : '$resolvedProviderName will arrive at $serviceTime.';
-            resolvedReminderDesc = resolvedProviderName == 'Zahid electrician' || resolvedProviderName == 'Ali AC Services'
-                ? "We'll notify you at 9:00 AM tomorrow so you're ready for the visit."
-                : "We'll notify you 1 hour before so you're ready for the visit.";
+            resolvedArrivalText = '$resolvedProviderName will arrive at $serviceTime.';
+            resolvedReminderDesc = reminderDescription;
             _showNotification(booking['reasoning'] ?? 'Your booking is confirmed.');
           }
         }
@@ -385,11 +555,11 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                         width: 82,
                                         height: 82,
                                         decoration: BoxDecoration(
-                                          color: isCompleted ? const Color(0xFF2E7D32) : accent,
+                                          color: isCompleted ? softSuccess : accent,
                                           shape: BoxShape.circle,
                                           boxShadow: [
                                             BoxShadow(
-                                              color: (isCompleted ? const Color(0xFF2E7D32) : accent).withOpacity(0.35),
+                                              color: (isCompleted ? softSuccess : accent).withOpacity(0.35),
                                               blurRadius: 22,
                                               offset: const Offset(0, 10),
                                             )
@@ -464,7 +634,7 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                       ),
                                       child: Icon(
                                         isCompleted ? Icons.stars_rounded : Icons.notifications_active_rounded,
-                                        color: isCompleted ? const Color(0xFF2E7D32) : accent,
+                                        color: isCompleted ? softSuccess : accent,
                                         size: 22,
                                       ),
                                     ),
@@ -536,7 +706,8 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                               ),
                                               const SizedBox(height: 2),
                                               Text(
-                                                resolvedProviderName == 'Zahid electrician' ? 'Ali AC Services' : resolvedProviderName,
+                                                resolvedProviderName,
+                                                maxLines: 1,
                                                 overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
                                                   fontSize: 14.5,
@@ -586,13 +757,15 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                               const SizedBox(height: 2),
                                               Text(
                                                 resolvedBookingId,
+                                                maxLines: 1,
+                                                overflow: TextOverflow.ellipsis,
                                                 style: const TextStyle(
                                                   fontSize: 14.5,
                                                   fontWeight: FontWeight.w800,
                                                   color: ink,
                                                   fontFamily: 'Plus Jakarta Sans',
+                                                  ),
                                                 ),
-                                              ),
                                             ],
                                           ),
                                         ],
@@ -601,7 +774,12 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 140), // spacer for footer
+                              const SizedBox(height: 20),
+
+                               // ── Booking Status Timeline ──────────────────
+                              _buildStatusTimeline(snapshot),
+
+                              const SizedBox(height: 260), // spacer for footer
                             ],
                           ),
                         ),
@@ -632,99 +810,78 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
                     children: [
+                      // View Reminder Button
+                      if (!isCompleted && snapshot.hasData && snapshot.data!.exists) ...[
+                        SizedBox(
+                          width: double.infinity,
+                          height: 50,
+                          child: ElevatedButton.icon(
+                            icon: const Icon(Icons.notifications_active_outlined, size: 18),
+                            label: const Text(
+                              'View Reminder Details',
+                              style: TextStyle(
+                                fontFamily: 'Plus Jakarta Sans',
+                                fontWeight: FontWeight.w800,
+                                fontSize: 14.5,
+                              ),
+                            ),
+                            onPressed: () {
+                              final booking = snapshot.data!.data() as Map<String, dynamic>;
+                              _showReminderBottomSheet(context, booking);
+                            },
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: accentBg,
+                              foregroundColor: accent,
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(14),
+                                side: const BorderSide(color: accent, width: 1.2),
+                              ),
+                              elevation: 0,
+                            ),
+                          ),
+                        ),
+                        const SizedBox(height: 10),
+                      ],
                       SizedBox(
                         width: double.infinity,
-                        height: 56,
-                        child: ElevatedButton(
+                        height: 58,
+                        child: ElevatedButton.icon(
                           onPressed: isCompleted
                               ? null
                               : () async {
                                   try {
                                     await FirebaseFirestore.instance
                                         .collection('active_bookings')
-                                        .doc(userId)
+                                        .doc(bookingDocId)
                                         .update({'status': 'completed'});
                                   } catch (e) {
                                     debugPrint('Error updating status: $e');
                                   }
                                 },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor: isCompleted ? Colors.grey : accent,
-                            foregroundColor: Colors.white,
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                            elevation: 2,
-                            shadowColor: accent.withOpacity(0.2),
+                          icon: Icon(
+                            isCompleted ? Icons.check_circle_rounded : Icons.task_alt_rounded,
+                            size: 18,
                           ),
-                          child: Text(
-                            isCompleted ? 'Service Completed ✓' : 'Complete Service (Kaam Mukammal)',
+                          label: Text(
+                            isCompleted ? 'Service Completed' : 'Complete Service',
                             style: const TextStyle(
-                              fontSize: 15.5,
-                              fontWeight: FontWeight.w855,
-                              fontFamily: 'Plus Jakarta Sans',
-                            ),
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      
-                      // View Reminder Button
-                      if (!isCompleted && snapshot.hasData && snapshot.data!.exists)
-                        Padding(
-                          padding: const EdgeInsets.only(bottom: 12),
-                          child: SizedBox(
-                            width: double.infinity,
-                            height: 52,
-                            child: OutlinedButton.icon(
-                              icon: const Icon(Icons.notifications_active_outlined, size: 18),
-                              label: const Text(
-                                'View Reminder Details',
-                                style: TextStyle(
-                                  fontFamily: 'Plus Jakarta Sans',
-                                  fontWeight: FontWeight.w800,
-                                  fontSize: 15,
-                                ),
-                              ),
-                              onPressed: () {
-                                final booking = snapshot.data!.data() as Map<String, dynamic>;
-                                _showReminderBottomSheet(context, booking);
-                              },
-                              style: OutlinedButton.styleFrom(
-                                foregroundColor: accent,
-                                side: const BorderSide(color: accent, width: 1.5),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.circular(14),
-                                ),
-                              ),
-                            ),
-                          ),
-                        ),
-
-                      SizedBox(
-                        width: double.infinity,
-                        height: 56,
-                        child: OutlinedButton(
-                          onPressed: () {
-                            Navigator.of(context).popUntil((route) => route.isFirst);
-                          },
-                          style: OutlinedButton.styleFrom(
-                            foregroundColor: ink,
-                            side: BorderSide(color: border, width: 1.5),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.circular(16),
-                            ),
-                          ),
-                          child: const Text(
-                            'Back to Home Screen',
-                            style: TextStyle(
                               fontSize: 15.5,
                               fontWeight: FontWeight.w800,
                               fontFamily: 'Plus Jakarta Sans',
                             ),
                           ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: isCompleted ? Colors.grey.shade400 : accent,
+                            foregroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(16),
+                            ),
+                            elevation: 3,
+                            shadowColor: accent.withOpacity(0.25),
+                          ),
                         ),
                       ),
+
                     ],
                   ),
                 ),
@@ -735,6 +892,20 @@ class _BookingSuccessScreenState extends State<BookingSuccessScreen> {
       },
     );
   }
+}
+
+// Data class for timeline steps
+class _TimelineStep {
+  final IconData icon;
+  final String label;
+  final String time;
+  final Color  color;
+  const _TimelineStep({
+    required this.icon,
+    required this.label,
+    required this.time,
+    required this.color,
+  });
 }
 
 // Background custom painter for subtle dots pattern
