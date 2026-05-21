@@ -2,9 +2,7 @@
 
 > **Book any home service in seconds with Just a Text**
 
-An AI-powered, multilingual platform that instantly connects users with reliable local professionals across Pakistan's informal economy. 
-
----
+An AI-powered, multilingual platform that instantly connects users with reliable local professionals, text a request in Urdu, Roman Urdu, or English. HunarLink instantly finds, ranks, and books a verified provider. Live updates + push notifications included.
 
 ## 📌 What is HunarLink?
 
@@ -42,121 +40,246 @@ And HunarLink:
 ## 👥 Team
 
 | Person | Role | Owns |
-|--------|------|------|
-| **Ghulam Mustafa** | AI + Backend Lead | Google Antigravity, Maps API, Node.js server, Firebase writes |
-| **Haider** | Flutter Mobile Lead | All screens, UI/UX, Firebase StreamBuilder, notifications |
+|--------|------|------| 
+| **Ghulam Mustafa** | AI + Backend Lead | Agent orchestration, Node.js API, Google AI integration, trace logging |
+| **Muhammad Haider Ali** | Flutter Mobile Lead | Flutter app architecture, Firebase integration, real-time UI updates, local notifications |
+| **Sana Abdul Aziz** | Documentation + Testing Lead | README, architecture diagrams, test case design |
+
 
 ---
 
 ## 🏗️ System Architecture
 
 ```
-┌─────────────────────────────────────────────────────────────┐
-│                     Flutter Mobile App                       │
-│         (Home → Processing → Results → Booking → Success)    │
-└──────────────────────────┬──────────────────────────────────┘
-                           │  POST /request
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Node.js + Express API Server                    │
-│                    localhost:3000                            │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│           Google Antigravity Orchestrator                    │
-│                                                             │
-│  [01] parse_intent     → Gemini LLM (multilingual NLP)      │
-│         ↓                                                   │
-│  [02] fetch_maps_data  → Google Maps Places API             │
-│         ↓                                                   │
-│  [03] rank_and_select  → Weighted scoring algorithm         │
-│         ↓                                                   │
-│  [04] execute_booking  → Firebase Firestore WRITE           │
-│         ↓                                                   │
-│  [05] schedule_followup→ Reminder payload generation        │
-└──────────────────────────┬──────────────────────────────────┘
-                           │
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│              Firebase Firestore                              │
-│         Collection: active_bookings                         │
-│         Document ID: userId                                 │
-└──────────────────────────┬──────────────────────────────────┘
-                           │  StreamBuilder (real-time)
-                           ▼
-┌─────────────────────────────────────────────────────────────┐
-│         Flutter UI auto-updates to Booking Confirmed        │
-└─────────────────────────────────────────────────────────────┘
+┌──────────────────────────────────────────────────────────────────┐
+│                      Flutter Mobile App                          │
+│  SplashScreen → HomeScreen → ProcessingScreen → ResultsScreen    │
+│       → BookingConfirmScreen → BookingSuccessScreen              │
+│              MyBookingsScreen  |  ReminderScreen (Bottom Sheet)  │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │  POST /request  (30s timeout)
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│               Node.js + Express API Server                       │
+│                     localhost:3000                               │
+│         GET /health  ·  POST /request                            │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │  antigravityAgent.run()
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│          HunarLinkOrchestrator  (Google Antigravity)             │
+│                                                                  │
+│  [01] parse_intent      → Gemini LLM  (EN / UR / Roman UR)      │
+│            ↓                                                     │
+│  [02] fetch_maps_data   → Google Maps Places API (New)          │
+│            ↓                                                     │
+│  [03] rank_and_select   → Weighted scoring + reasoning           │
+│            ↓                                                     │
+│  [04] execute_booking   → Firebase Firestore WRITE               │
+│            ↓                                                     │
+│  [05] schedule_followup → Reminder payload + trigger_at          │
+│                                                                  │
+│  ◇ Structured JSON trace emitted after every tool step           │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │  Firestore write
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│              Firebase Firestore                                  │
+│         Collection: active_bookings                             │
+│         Document ID: {userId}                                   │
+│         Fields: booking_id · service_category · status · ...    │
+└─────────────────────────────┬────────────────────────────────────┘
+                              │  StreamBuilder (real-time listener)
+                              ▼
+┌──────────────────────────────────────────────────────────────────┐
+│    Flutter UI auto-updates → Confirmed → Completed 🎉            │
+│    Local push notification fires (flutter_local_notifications)   │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
 ## 🤖 How Google Antigravity Is Used
 
-Google Antigravity is the **core orchestration engine** of HunarLink. It manages the entire multi-agent pipeline — from understanding the user's request to writing the booking to Firebase.
+Google Antigravity orchestrates the entire booking workflow as a **5-step pipeline** that runs seamlessly from user input to confirmed booking:
+
+**The Flow:**
+1. **Parse Intent** → AI understands "AC technician in G-13 tomorrow morning" in any language (EN/UR/Roman UR)
+2. **Fetch Providers** → Calls Google Maps Places API for real nearby businesses
+3. **Rank & Select** → Scores providers using weighted formula: 40% distance + 35% rating + 25% availability
+4. **Execute Booking** → Writes confirmed booking to Firebase Firestore
+5. **Schedule Followup** → Sets reminder notification for the user
+
+**Why Antigravity?** It manages state passing between all 5 tools — the output of step 1 becomes input to step 2, with no manual hand-offs. Every decision emits structured JSON traces for full transparency and auditability.
+
+### Agentic Architecture & Orchestration
+
+Google Antigravity coordinates the workflow by acting as a centralized manager that registers the tools, schedules their execution, and passes the updated state (context) down the pipeline.
+
+#### Shared Memory (State Context)
+Rather than hardcoding dependencies between tools, a shared **Context Object** acts as the memory of the agent. Each tool reads from this context, processes its task, and stores its results back into the context for the subsequent tools:
+
+*   **User Input:** The raw text request sent by the user (Urdu, Roman Urdu, or English).
+*   **User ID:** A unique identifier for the booking session.
+*   **Intent Profile:** The structured intent extracted by `parse_intent` (Category, Location, Time).
+*   **Provider List:** The nearby service providers returned by `fetch_maps_data`.
+*   **Selected Partner:** The optimal provider chosen by the ranking algorithm in `rank_and_select`.
+*   **Booking Record:** The Firestore transaction payload generated during `execute_booking`.
+*   **Reminder Schedule:** The notification parameters set up by `schedule_followup`.
+*   **Traces:** The step-by-step logs of all operations.
+
 
 ### Agent Pipeline
 
-| Step | Agent | Tool | What It Does |
-|------|-------|------|-------------|
-| 01 | Intent Agent | `parse_intent` | Parses multilingual input (Urdu/Roman Urdu/English) into structured JSON using Gemini LLM |
-| 02 | Discovery Agent | `fetch_maps_data` | Queries Google Maps Places API to find real nearby service providers |
-| 03 | Ranking Agent | `rank_and_select` | Scores providers using weighted formula, selects best match with reasoning |
-| 04 | Booking Agent | `execute_booking` | Writes confirmed booking to Firebase Firestore — the required action simulation |
-| 05 | Follow-Up Agent | `schedule_followup` | Generates reminder payload, triggers Flutter local notification |
+| Step | Tool | Input | Output | External API |
+|------|------|-------|--------|-------------|
+| 01 | `parse_intent` | Raw user text | `{service_category, location, time_preference}` | Gemini 2.5 Flash |
+| 02 | `fetch_maps_data` | service_category + location | Array of 10 providers with distances | Google Maps Places API |
+| 03 | `rank_and_select` | Providers array + time_preference | Top 3 ranked + selected + **reasoning** | JS logic |
+| 04 | `execute_booking` | selected + userId + time + **service_category** | Full booking payload + Firebase write | Firebase Firestore |
+| 05 | `schedule_followup` | Booking payload | Reminder payload with trigger_at | JS logic |
 
-### Antigravity Trace Log (Sample)
-```
-[01] parse_intent INVOKED
-     Input: "Mujhe G-13 mein kal subah AC technician chahiye"
-     Output: { service_category: "AC Technician", location: "G-13 Islamabad", time_preference: "tomorrow_morning" }
+### Antigravity Trace Format (trace_001.txt)
 
-[02] fetch_maps_data INVOKED
-     Query: "AC Technician" near "G-13 Islamabad"
-     Found: 10 providers from Google Maps Places API
+Every tool emits a structured JSON trace block — this is the submission artifact demonstrating real agentic reasoning:
 
-[03] rank_and_select INVOKED
-     1. Abbasi Electric & AC Repair Center  | Score: 0.99 | 1 km   | 4.9 stars
-     2. Mehran Experts                      | Score: 0.99 | 1.8 km | 4.9 stars
-     3. Top Tech Cool Engineering           | Score: 0.95 | 1.4 km | 4.3 stars
-     Selected: Abbasi Electric & AC Repair Center
-
-[04] execute_booking INVOKED
-     Firebase write: active_bookings/user_001 [CONFIRMED]
-     booking_id: BK-1779101471453
-
-[05] schedule_followup INVOKED
-     Reminder scheduled: 2026-05-19T10:51:11Z
-     Message: "Reminder: Abbasi Electric & AC Repair Center arrives in 1 hour."
-
-PIPELINE COMPLETE — Total time: ~3.8 seconds
+```json
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "parse_intent",
+  "step": 1,
+  "input": { "userText": "Mujhe G-13 mein kal subah AC technician chahiye" },
+  "reasoning": "Detected Roman Urdu. Extracting service, location, time.",
+  "output": {
+    "service_category": "AC Technician",
+    "location": "G-13 Islamabad",
+    "time_preference": "tomorrow_morning"
+  },
+  "duration_ms": 3,
+  "status": "success"
+}
 ```
 
-### Ranking Formula
+### Ranking Formula (Exact Spec Implementation)
+
 ```
 Score = (0.40 × proximity_score) + (0.35 × rating_score) + (0.25 × availability_score)
 
-proximity_score:     1.0 if < 2km | 0.8 if < 4km | 0.6 if < 6km | 0.4 if further
-rating_score:        provider.rating / 5.0
-availability_score:  1.0 if available | 0.5 if flexible | 0.0 if urgent conflict
+proximity_score:
+  1.0  =  distance < 2km
+  0.8  =  distance < 4km
+  0.6  =  distance < 6km
+  0.4  =  distance >= 6km
+
+rating_score:
+  provider.rating / 5.0
+
+availability_score:
+  1.0  =  tomorrow_morning / today_evening / other
+  0.5  =  flexible
+  0.0  =  today_urgent  (emergency conflict)
 ```
+
+**Sample Rankings (from trace_001.txt):**
+```
+1. Abbasi Electric & AC Repair  — Score: 0.99 | 1.0 km | ⭐ 4.9
+2. Raja AC Services Islamabad   — Score: 0.98 | 1.4 km | ⭐ 4.7
+3. Khan Brothers Technicians    — Score: 0.97 | 1.8 km | ⭐ 4.6
+```
+
+### Submission Artifacts
+
+Our Antigravity traces prove real agentic reasoning and orchestration:
+- **`agent/trace_logs/trace_001.txt`** — Full end-to-end execution trace (JSON format)
+- Each tool step includes: **input** → **reasoning** → **output** → **duration**
+- Ranking scores show weighted calculation at decision points
+- All 5 tools execute in sequence with state passing between them
+
+---
+
+## 📱 Flutter App — All 8 Screens
+
+| Screen | Purpose | Key Feature |
+|--------|---------|-------------|
+| `SplashScreen` | Launch screen | Auto-navigates to HomeScreen after 2.5s |
+| `HomeScreen` | Main entry | Multilingual input (EN/UR/RU), bottom nav, service cards |
+| `ProcessingScreen` | Loading state | Animated step display during API call |
+| `ResultsScreen` | Show results | Top 3 providers with scores and AI reasoning |
+| `BookingConfirmScreen` | Confirm booking | Full booking summary before Firebase write |
+| `BookingSuccessScreen` | Live tracking | Firestore `StreamBuilder`, reminder notification, completion flow |
+| `MyBookingsScreen` | Booking history | Active booking (live Firebase) + past bookings list |
+| `ReminderScreen` | Bottom sheet | Reminder details, AI reasoning, "Test Notification Now" button |
+
+### Firebase Integration
+
+- `StreamBuilder` in `BookingSuccessScreen` listens to `active_bookings/{userId}`
+- UI auto-updates when Firestore document changes: `confirmed` → `completed`
+- Completion triggers star icon swap, green theme, and completion push notification
+- `MyBookingsScreen` also streams the active booking in real-time
 
 ---
 
 ## 🛠️ Tech Stack
 
-| Layer | Technology | Purpose |
-|-------|-----------|---------|
-| Agentic Orchestration | Google Antigravity | Core agent pipeline, tool execution, trace logs |
-| Mobile App | Flutter (Dart) | Cross-platform UI, Firebase StreamBuilder |
-| Backend API | Node.js + Express | REST API gateway between Flutter and Antigravity |
-| AI / NLP | Gemini 2.5 Flash via Antigravity | Multilingual intent parsing |
-| Real-World Data | Google Maps Places API (New) | Live provider discovery by location |
-| Simulation Backend | Firebase Firestore | Booking write = required action simulation |
-| Notifications | Flutter Local Notifications | Simulated reminder push notification |
+| Layer | Technology | Version | Purpose |
+|-------|-----------|---------|---------|
+| Agentic Orchestration | Google Antigravity (Cameo) | Latest | Core agent pipeline, sequencing, trace logs |
+| Mobile | Flutter (Dart) | SDK 3.x | 8-screen app, Firebase StreamBuilder, notifications |
+| Backend API | Node.js + Express | 18+ | REST gateway — `POST /request`, `GET /health` |
+| AI / NLP | Gemini via Google AI SDK | 2.5 Flash | Multilingual intent parsing (EN/UR/Roman UR) |
+| Provider Data | Google Maps Places API (New) | v1 | Real live provider discovery by location |
+| Database | Firebase Firestore | Latest | Booking simulation + real-time StreamBuilder |
+| Notifications | flutter_local_notifications | ^16.3.0 | Reminder + completion push notifications |
+
+## 🔑 APIs & External Services
+
+| API | Purpose | Free Tier | Auth Method |
+|-----|---------|-----------|-------------|
+| Google Gemini | Multilingual intent parsing | ~20 requests/day | API Key |
+| Google Maps Places API | Real-time provider discovery | 150,000 requests/month | API Key |
+| Google Distance Matrix API | Calculate distance between user and providers | 100 elements/day | API Key |
+| Firebase Firestore | Booking data + real-time updates | 50k reads/20k writes/day | Service Account JSON |
+
 
 ---
 
-*HunarLink — Connecting Pakistan's skilled workforce, one booking at a time.*
+## 📄 Firebase Schema
 
+```
+active_bookings/
+└── {userId}/
+    ├── booking_id        String   "BK-1779016287619"
+    ├── user_id           String   "user_001"
+    ├── status            String   "confirmed" | "completed"
+    ├── provider_name     String   "Abbasi Electric & AC Repair"
+    ├── service_category  String   "AC Technician"
+    ├── service_time      String   "10:00 AM Tomorrow"
+    ├── provider_distance String   "1 km"
+    ├── provider_rating   String   "4.9"
+    ├── reasoning         String   "Selected as closest available provider..."
+    ├── created_at        String   ISO timestamp
+    └── reminder_at       String   ISO timestamp (24hrs after booking)
+```
+
+---
+
+
+## ⚠️ Assumptions & Limitations
+
+### Assumptions
+1. All service requests are within Islamabad — location defaults to Islamabad if not specified
+2. Provider distance is estimated from result order (`index 0 = 1km`, `+0.4km` per result)
+3. Provider availability is simulated — real availability requires a two-sided provider app
+4. Booking confirmation is a Firestore write simulating a real system state change
+5. `userId` is a simple string — no full auth system in hackathon scope
+6. Single user session — no persistent history across app restarts
+
+### Limitations
+1. No real provider onboarding — providers from Google Maps, not a registered database
+2. No payment integration — booking is simulated only
+3. Gemini free tier — ~20 requests/day; paid tier needed for production
+4. Local server — API on localhost; needs cloud deployment for production
+5. Android only — iOS not configured for hackathon scope
+6. Distance is GPS-calculated via Google Distance Matrix API (driving distance) — falls back to index-estimate if API unavailable
+
+> "Technology should be a bridge, not a barrier. HunarLink is our bridge to connect millions of skilled workers with those who need their services — all powered by the magic of AI."

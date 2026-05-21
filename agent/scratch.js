@@ -34,7 +34,7 @@ async function test() {
 test();
 
 require('dotenv').config();
-const { runHunarLinkPipeline } = require('./agent');
+const antigravityAgent = require('./agent');
 
 const testInputs = [
   "Mujhe G-13 mein kal subah AC technician chahiye",
@@ -44,7 +44,10 @@ const testInputs = [
 
 (async () => {
   for (const input of testInputs) {
-    const result = await runHunarLinkPipeline(input, 'user_test_123');
+    const result = await antigravityAgent.run({
+      input: input,
+      userId: 'user_test_123'
+    });
     console.log('Final result:', JSON.stringify(result?.booking, null, 2));
     console.log('\n-------------------------------------------\n');
     

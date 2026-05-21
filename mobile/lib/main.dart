@@ -1,14 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'screens/home_screen.dart';
+import 'firebase_options.dart';
+import 'screens/splash_screen.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  try {
-    await Firebase.initializeApp();
-  } catch (e) {
-    debugPrint('Firebase failed to initialize: $e');
-  }
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
   runApp(const HunarLinkApp());
 }
 
@@ -22,13 +21,13 @@ class HunarLinkApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         colorScheme: ColorScheme.fromSeed(
-          seedColor: const Color(0xFF006053),
-          primary: const Color(0xFF006053),
+          seedColor: const Color(0xFF8C1616),
+          primary: const Color(0xFF8C1616),
         ),
         useMaterial3: true,
         fontFamily: 'Plus Jakarta Sans',
       ),
-      home: const HomeScreen(),
+      home: const SplashScreen(),
     );
   }
 }

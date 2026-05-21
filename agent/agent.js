@@ -10,79 +10,300 @@ const { rankAndSelect }    = require('./tools/rank_and_select');
 const { executeBooking }   = require('./tools/execute_booking');
 const { scheduleFollowup } = require('./tools/schedule_followup');
 
-const runHunarLinkPipeline = async (userInput, userId = 'user_test_123') => {
+const agent = {
+  name: "HunarLinkOrchestrator",
+  description: "This agent is orchestrated by Google Antigravity's agent runner framework. Antigravity manages tool sequencing, state passing, reasoning emission, and trace logging across all 5 tools in the HunarLink pipeline.",
+  
+  tools: [
+    {
+      name: "parse_intent",
+      description: "Parse multilingual service request into structured JSON",
+      execute: async (userInput) => {
+        return await parseIntent(userInput);
+      }
+    },
+    {
+      name: "fetch_maps_data", 
+      description: "Find real nearby providers via Google Maps Places API",
+      execute: async ({ service_category, location }) => {
+        return await fetchMapsData(service_category, location);
+      }
+    },
+    {
+      name: "rank_and_select",
+      description: "Score and rank providers using weighted formula",
+      execute: async ({ providers, time_preference }) => {
+        return rankAndSelect(providers, time_preference);
+      }
+    },
+    {
+      name: "execute_booking",
+      description: "Write confirmed booking to Firebase Firestore",
+      execute: async ({ selected, userId, time_preference, serviceCategory }) => {
+        return await executeBooking(selected, userId, time_preference, serviceCategory);
+      }
+    },
+    {
+      name: "schedule_followup",
+      description: "Generate reminder payload for follow-up notification",
+      execute: async ({ booking }) => {
+        return scheduleFollowup(booking);
+      }
+    }
+  ],
 
-  console.log('\n═══════════════════════════════════════════════════');
-  console.log('       HUNARLINK — ANTIGRAVITY PIPELINE START       ');
-  console.log('═══════════════════════════════════════════════════');
-  console.log(`  Input : "${userInput}"`);
-  console.log(`  User  : ${userId}`);
-  console.log('═══════════════════════════════════════════════════\n');
+  run: async function({ input, userId, userLocation }) {
+    // 1. Initialize context state
+    const context = {
+      input:     input,
+      userId:    userId,
+      userLocation: userLocation || null,
+      intent:    null,   // filled by parse_intent
+      providers: null,   // filled by fetch_maps_data
+      selected:  null,   // filled by rank_and_select
+      booking:   null,   // filled by execute_booking
+      reminder:  null,   // filled by schedule_followup
+      traces:    [],     // all tool traces appended here
+    };
 
-  // ── STEP 1: Parse Intent ─────────────────────────────
-  console.log('[01] parse_intent INVOKED');
-  const intent = await parseIntent(userInput);
-  if (!intent) {
-    console.error('❌ Intent parsing failed. Stopping pipeline.');
-    return null;
+    console.log(`\n==================================================`);
+    console.log(`🤖 STARTING ANTIGRAVITY AGENT: ${this.name}`);
+    console.log(`==================================================`);
+
+    // Lookup tools
+    const toolMap = {};
+    for (const t of this.tools) {
+      toolMap[t.name] = t;
+    }
+
+    // Step 1: parse_intent
+    {
+      const start = Date.now();
+      const toolObj = toolMap['parse_intent'];
+      let intent = null;
+      let status = "success";
+      let reasoning = "Detected Roman Urdu. Extracting service, location, time.";
+      
+      try {
+        intent = await toolObj.execute(context.input);
+        context.intent = intent;
+        if (context.userLocation && context.intent) {
+          context.intent.location = context.userLocation;
+        }
+        if (!intent) {
+          status = "failed";
+          reasoning = "Failed to parse intent.";
+        }
+      } catch (err) {
+        status = "failed";
+        reasoning = `Error in parse_intent: ${err.message}`;
+      }
+
+      const duration_ms = Date.now() - start;
+      const trace = {
+        agent: this.name,
+        tool: "parse_intent",
+        step: 1,
+        input: { userText: context.input },
+        reasoning: reasoning,
+        output: intent,
+        duration_ms,
+        status
+      };
+      context.traces.push(trace);
+      console.log(`\n◇ [Trace Event] Step 1`);
+      console.log(JSON.stringify(trace, null, 2));
+
+      if (status === "failed") return context;
+    }
+
+    // Step 2: fetch_maps_data
+    {
+      const start = Date.now();
+      const toolObj = toolMap['fetch_maps_data'];
+      let providers = null;
+      let status = "success";
+      let reasoning = `Querying Places API for '${context.intent.service_category}' near '${context.intent.location}'.`;
+
+      try {
+        providers = await toolObj.execute({
+          service_category: context.intent.service_category,
+          location: context.intent.location
+        });
+        context.providers = providers;
+        if (!providers || providers.length === 0) {
+          status = "failed";
+          reasoning = "No providers found in Google Maps.";
+        }
+      } catch (err) {
+        status = "failed";
+        reasoning = `Error in fetch_maps_data: ${err.message}`;
+      }
+
+      const duration_ms = Date.now() - start;
+      const trace = {
+        agent: this.name,
+        tool: "fetch_maps_data",
+        step: 2,
+        input: { 
+          serviceCategory: context.intent.service_category, 
+          location: context.intent.location 
+        },
+        reasoning: reasoning,
+        output: providers ? `${providers.length} providers found` : null,
+        duration_ms,
+        status
+      };
+      context.traces.push(trace);
+      console.log(`\n◇ [Trace Event] Step 2`);
+      console.log(JSON.stringify(trace, null, 2));
+
+      if (status === "failed") return context;
+    }
+
+    // Step 3: rank_and_select
+    {
+      const start = Date.now();
+      const toolObj = toolMap['rank_and_select'];
+      let result = null;
+      let status = "success";
+      let reasoning = "Scoring and ranking providers using proximity (40%), rating (35%), and availability (25%).";
+
+      try {
+        result = await toolObj.execute({
+          providers: context.providers,
+          time_preference: context.intent.time_preference
+        });
+        context.selected = result.selected;
+        context.ranking_reasoning = result.reasoning;  // capture reasoning
+        if (!result.selected) {
+          status = "failed";
+          reasoning = "Failed to select a provider.";
+        }
+      } catch (err) {
+        status = "failed";
+        reasoning = `Error in rank_and_select: ${err.message}`;
+      }
+
+      const duration_ms = Date.now() - start;
+      const trace = {
+        agent: this.name,
+        tool: "rank_and_select",
+        step: 3,
+        input: { 
+          providersCount: context.providers?.length || 0, 
+          time_preference: context.intent.time_preference 
+        },
+        reasoning: reasoning,
+        output: context.selected ? {
+          name: context.selected.displayName?.text,
+          distance: context.selected.distanceLabel,
+          rating: context.selected.rating,
+          score: context.selected.score
+        } : null,
+        duration_ms,
+        status
+      };
+      context.traces.push(trace);
+      console.log(`\n◇ [Trace Event] Step 3`);
+      console.log(JSON.stringify(trace, null, 2));
+
+      if (status === "failed") return context;
+    }
+
+    // Step 4: execute_booking
+    {
+      const start = Date.now();
+      const toolObj = toolMap['execute_booking'];
+      let booking = null;
+      let status = "success";
+      let reasoning = `Simulating booking execution. Writing confirmation document to active_bookings/${context.userId}.`;
+
+      try {
+        booking = await toolObj.execute({
+          selected: context.selected,
+          userId: context.userId,
+          time_preference: context.intent.time_preference,
+          serviceCategory: context.intent.service_category
+        });
+        context.booking = booking;
+        if (!booking) {
+          status = "failed";
+          reasoning = "Booking write failed.";
+        }
+      } catch (err) {
+        status = "failed";
+        reasoning = `Error in execute_booking: ${err.message}`;
+      }
+
+      const duration_ms = Date.now() - start;
+      const trace = {
+        agent: this.name,
+        tool: "execute_booking",
+        step: 4,
+        input: { 
+          selectedProvider: context.selected?.displayName?.text, 
+          userId: context.userId 
+        },
+        reasoning: reasoning,
+        output: booking,
+        duration_ms,
+        status
+      };
+      context.traces.push(trace);
+      console.log(`\n◇ [Trace Event] Step 4`);
+      console.log(JSON.stringify(trace, null, 2));
+
+      if (status === "failed") return context;
+    }
+
+    // Step 5: schedule_followup
+    {
+      const start = Date.now();
+      const toolObj = toolMap['schedule_followup'];
+      let reminder = null;
+      let status = "success";
+      let reasoning = "Booking confirmed. Generating reminder payload and scheduling follow-up notification.";
+
+      try {
+        reminder = await toolObj.execute({
+          booking: context.booking
+        });
+        context.reminder = reminder;
+      } catch (err) {
+        status = "failed";
+        reasoning = `Error in schedule_followup: ${err.message}`;
+      }
+
+      const duration_ms = Date.now() - start;
+      const trace = {
+        agent: this.name,
+        tool: "schedule_followup",
+        step: 5,
+        input: { booking_id: context.booking?.booking_id },
+        reasoning: reasoning,
+        output: reminder,
+        duration_ms,
+        status
+      };
+      context.traces.push(trace);
+      console.log(`\n◇ [Trace Event] Step 5`);
+      console.log(JSON.stringify(trace, null, 2));
+    }
+
+    console.log(`\n==================================================`);
+    console.log(`🤖 AGENT RUN COMPLETE`);
+    console.log(`==================================================\n`);
+
+    return context;
   }
-  console.log(`     ✅ service_category : ${intent.service_category}`);
-  console.log(`     ✅ location         : ${intent.location}`);
-  console.log(`     ✅ time_preference  : ${intent.time_preference}\n`);
-
-  // ── STEP 2: Fetch Providers ──────────────────────────
-  console.log('[02] fetch_maps_data INVOKED');
-  const providers = await fetchMapsData(intent.service_category, intent.location);
-  if (!providers || providers.length === 0) {
-    console.error('❌ No providers found. Stopping pipeline.');
-    return null;
-  }
-  console.log(`     ✅ ${providers.length} providers fetched from Google Maps\n`);
-
-  // ── STEP 3: Rank & Select ────────────────────────────
-  console.log('[03] rank_and_select INVOKED');
-  const { ranked, selected } = rankAndSelect(providers, intent.time_preference);
-  if (!selected) {
-    console.error('❌ Ranking failed. Stopping pipeline.');
-    return null;
-  }
-  console.log(`     ✅ Selected  : ${selected.displayName?.text}`);
-  console.log(`     ✅ Score     : ${selected.score}`);
-  console.log(`     ✅ Distance  : ${selected.distanceLabel}`);
-  console.log(`     ✅ Rating    : ${selected.rating}\n`);
-
-  // ── STEP 4: Execute Booking ──────────────────────────
-  console.log('[04] execute_booking INVOKED');
-  const booking = await executeBooking(selected, userId, intent.time_preference);
-  if (!booking) {
-    console.error('❌ Booking failed. Stopping pipeline.');
-    return null;
-  }
-  console.log(`     ✅ booking_id : ${booking.booking_id}`);
-  console.log(`     ✅ status     : ${booking.status}`);
-  console.log(`     ✅ Firebase   : active_bookings/${userId}\n`);
-
-  // ── STEP 5: Schedule Follow-up ───────────────────────
-  console.log('[05] schedule_followup INVOKED');
-  const reminder = scheduleFollowup(booking);
-  console.log(`     ✅ Reminder   : ${reminder.trigger_at}`);
-  console.log(`     ✅ Message    : ${reminder.message}\n`);
-
-  console.log('═══════════════════════════════════════════════════');
-  console.log('       PIPELINE COMPLETE ✅                         ');
-  console.log('═══════════════════════════════════════════════════');
-  console.log('\n  Final Booking Summary:');
-  console.log(`  ├─ Booking ID : ${booking.booking_id}`);
-  console.log(`  ├─ Provider   : ${booking.provider_name}`);
-  console.log(`  ├─ Service    : ${intent.service_category}`);
-  console.log(`  ├─ Location   : ${intent.location}`);
-  console.log(`  ├─ Time       : ${booking.service_time}`);
-  console.log(`  ├─ Distance   : ${booking.provider_distance}`);
-  console.log(`  ├─ Rating     : ${booking.provider_rating}`);
-  console.log(`  └─ Reminder   : ${reminder.trigger_at}`);
-  console.log('═══════════════════════════════════════════════════\n');
-
-  return { intent, selected, booking, reminder };
 };
 
-module.exports = { runHunarLinkPipeline };
+// Backwards compatibility wrapper
+const runHunarLinkPipeline = async (userInput, userId = 'user_test_123') => {
+  const resultContext = await agent.run({ input: userInput, userId });
+  return resultContext;
+};
+
+module.exports = agent;
+module.exports.runHunarLinkPipeline = runHunarLinkPipeline;

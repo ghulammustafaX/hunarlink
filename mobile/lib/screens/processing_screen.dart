@@ -5,487 +5,218 @@ import 'results_screen.dart';
 
 class ProcessingScreen extends StatefulWidget {
   final String userInput;
-  const ProcessingScreen({super.key, required this.userInput});
-
+  final String? userLocation;
+  const ProcessingScreen({super.key, required this.userInput, this.userLocation});
   @override
   State<ProcessingScreen> createState() => _ProcessingScreenState();
 }
 
-class _ProcessingScreenState extends State<ProcessingScreen> with SingleTickerProviderStateMixin {
-  late AnimationController _pulsingController;
-  late Animation<double> _pulseOuter;
-  late Animation<double> _pulseInner;
+class _ProcessingScreenState extends State<ProcessingScreen> with TickerProviderStateMixin {
+  late AnimationController _pulseCtrl;
+  late AnimationController _fadeCtrl;
+  late Animation<double> _pulse;
+  late Animation<double> _fadeIn;
 
-  final List<String> _stepLabels = [
+  static const Color bg      = Color(0xFFF7F2EA);
+  static const Color surface = Color(0xFFFFFFFF);
+  static const Color ink     = Color(0xFF1A1415);
+  static const Color inkMid  = Color(0xFF6B5E58);
+  static const Color border  = Color(0xFFE4D9CF);
+  static const Color accent  = Color(0xFF8C1616);
+  static const Color numGray = Color(0xFFD4C8BC);
+
+  final List<String> _steps = [
     'Understanding your request...',
-    'Detecting language: Roman Urdu',
-    'Parsed: AC Technician · G-13 · Tomorrow Morning',
+    'Detecting language & intent',
+    'Parsing service type & location',
     'Searching nearby providers...',
-    'Ranking by distance + rating...',
-    'Selected best provider. Preparing booking...',
+    'Ranking by distance & rating...',
+    'Preparing your booking...',
   ];
-
-  final List<bool> _isCompleted = [false, false, false, false, false, false];
-  int _activeStepIndex = 0;
+  final List<bool> _done = [false, false, false, false, false, false];
+  int _active = 0;
   Timer? _timer;
+  bool _apiDone = false;
+  bool _animDone = false;
   Map<String, dynamic>? _apiResult;
 
   @override
   void initState() {
     super.initState();
-
-    // Set up pulsing animation for the AI Core
-    _pulsingController = AnimationController(
-      vsync: this,
-      duration: const Duration(seconds: 2),
-    )..repeat();
-
-    _pulseOuter = Tween<double>(begin: 1.0, end: 1.6).animate(
-      CurvedAnimation(parent: _pulsingController, curve: Curves.easeOut),
-    );
-
-    _pulseInner = Tween<double>(begin: 1.0, end: 1.3).animate(
-      CurvedAnimation(parent: _pulsingController, curve: Curves.easeOut),
-    );
-
-    _runPipeline();
-    _fetchBackendData();
+    _pulseCtrl = AnimationController(vsync: this, duration: const Duration(seconds: 2))..repeat();
+    _fadeCtrl  = AnimationController(vsync: this, duration: const Duration(milliseconds: 500))..forward();
+    _pulse  = Tween<double>(begin: 1.0, end: 1.4).animate(CurvedAnimation(parent: _pulseCtrl, curve: Curves.easeInOut));
+    _fadeIn = CurvedAnimation(parent: _fadeCtrl, curve: Curves.easeOut);
+    _fetchData();
+    _runSteps();
   }
 
-  void _fetchBackendData() async {
+  void _fetchData() async {
     try {
-      final res = await ApiService.processRequest(widget.userInput);
-      if (mounted) {
-        setState(() {
-          _apiResult = res;
-        });
-      }
-    } catch (e) {
-      debugPrint('Error loading backend data in ProcessingScreen: $e');
+      final res = await ApiService.processRequest(
+        widget.userInput,
+        location: widget.userLocation,
+      );
+      if (mounted) { setState(() { _apiResult = res; _apiDone = true; }); _tryNav(); }
+    } catch (_) {
+      if (mounted) { setState(() => _apiDone = true); _tryNav(); }
     }
   }
 
-  void _runPipeline() {
-    const stepDuration = Duration(milliseconds: 1400);
-    _timer = Timer.periodic(stepDuration, (timer) {
+  void _runSteps() {
+    _timer = Timer.periodic(const Duration(milliseconds: 1200), (t) {
       if (!mounted) return;
-
       setState(() {
-        if (_activeStepIndex < _stepLabels.length) {
-          _isCompleted[_activeStepIndex] = true;
-          _activeStepIndex++;
-        }
-
-        if (_activeStepIndex == _stepLabels.length) {
-          _timer?.cancel();
-          _navigateToResults();
-        }
+        if (_active < _steps.length) { _done[_active] = true; _active++; }
+        if (_active >= _steps.length) { t.cancel(); _animDone = true; _tryNav(); }
       });
     });
   }
 
-  void _navigateToResults() {
-    Future.delayed(const Duration(milliseconds: 800), () {
+  void _tryNav() {
+    if (!_animDone || !_apiDone) return;
+    Future.delayed(const Duration(milliseconds: 300), () {
       if (!mounted) return;
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder: (_) => ResultsScreen(apiResult: _apiResult),
-        ),
-      );
+      if (_apiResult != null) {
+        Navigator.pushReplacement(context, PageRouteBuilder(
+          pageBuilder: (_, a, __) => ResultsScreen(apiResult: _apiResult),
+          transitionsBuilder: (_, anim, __, child) => FadeTransition(opacity: anim, child: child),
+          transitionDuration: const Duration(milliseconds: 350),
+        ));
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+          content: const Text('Could not reach server. Check your connection.'),
+          backgroundColor: accent,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+        ));
+        Navigator.pop(context);
+      }
     });
   }
 
   @override
   void dispose() {
-    _pulsingController.dispose();
+    _pulseCtrl.dispose();
+    _fadeCtrl.dispose();
     _timer?.cancel();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    const Color surfaceDark = Color(0xFF062E28);
-    const Color primaryFixedDim = Color(0xFF7BD7C4);
-    const Color primaryContainer = Color(0xFF0B7B6B);
-    const Color textMint = Color(0xFFB3FFED);
-    const Color outlineColor = Color(0xFF6E7A76);
-
     return Scaffold(
-      backgroundColor: surfaceDark,
-      appBar: AppBar(
-        backgroundColor: Colors.transparent,
-        elevation: 0,
-        automaticallyImplyLeading: false,
-        title: const Row(
-          children: [
-            Icon(Icons.menu, color: primaryFixedDim),
-            SizedBox(width: 8),
-            Text(
-              'Khidmat AI 🇵🇰',
-              style: TextStyle(
-                color: primaryFixedDim,
-                fontWeight: FontWeight.bold,
-                fontSize: 20,
-                fontFamily: 'Plus Jakarta Sans',
-              ),
-            ),
-          ],
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatarWidget(
-              radius: 16,
-              borderWidth: 1,
-              borderColor: Color(0x4D7BD7C4),
-              backgroundImage: NetworkImage(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuDwZX9mLcrFQrHxRqkCjQUaAcU7egyWAa0bEElMgFDqZM88HKtCyZAj1Vu3FUcR6Vp9DtFqHXsPwk52UneshwNZ6g0W7YejdE_akhjdcyTMWzzHVvqX4dN3dUZPJLUKjFJlTjK4eAQUMDrE_rCbHqbbuKXKKKBXHz3yGpV5wGSVrOIK7lNI7wT0Rv-iF6nJNPnFLWdj2ues8c4aYkEMfQQjNWWwbkBf0qk_vbcshVVs0qhxVglwS1gGK5Mk64PCxV9dMop3AVl4WvA',
-              ),
-            ),
-          )
-        ],
-      ),
-      body: SafeArea(
-        child: Column(
-          children: [
-            Expanded(
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 24),
-                      // Header Text
-                      const Text(
-                        'Agent is working...',
-                        style: TextStyle(
-                          color: primaryFixedDim,
-                          fontSize: 24,
-                          fontWeight: FontWeight.bold,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      const Text(
-                        'Securing the best service for your home',
-                        style: TextStyle(
-                          color: Color(0xCCBDC9C5),
-                          fontSize: 15,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-
-                      // Central Pulsing AI Engine
-                      Center(
-                        child: SizedBox(
-                          width: 192,
-                          height: 192,
-                          child: Stack(
-                            alignment: Alignment.center,
-                            children: [
-                              // Pulsing Outer Rings
-                              AnimatedBuilder(
-                                animation: _pulsingController,
-                                builder: (context, child) {
-                                  return Opacity(
-                                    opacity: (1.6 - _pulseOuter.value).clamp(0.0, 1.0),
-                                    child: Transform.scale(
-                                      scale: _pulseOuter.value,
-                                      child: Container(
-                                        width: 120,
-                                        height: 120,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: primaryContainer.withOpacity(0.3),
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              AnimatedBuilder(
-                                animation: _pulsingController,
-                                builder: (context, child) {
-                                  return Opacity(
-                                    opacity: (1.3 - _pulseInner.value).clamp(0.0, 1.0),
-                                    child: Transform.scale(
-                                      scale: _pulseInner.value,
-                                      child: Container(
-                                        width: 120,
-                                        height: 120,
-                                        decoration: BoxDecoration(
-                                          shape: BoxShape.circle,
-                                          border: Border.all(
-                                            color: primaryContainer.withOpacity(0.5),
-                                            width: 2,
-                                          ),
-                                        ),
-                                      ),
-                                    ),
-                                  );
-                                },
-                              ),
-                              // Core Ring
-                              Container(
-                                width: 100,
-                                height: 100,
-                                decoration: BoxDecoration(
-                                  shape: BoxShape.circle,
-                                  border: Border.all(
-                                    color: primaryFixedDim.withOpacity(0.6),
-                                    width: 1.5,
-                                  ),
-                                ),
-                              ),
-                              // AI Core Icon
-                              Container(
-                                width: 80,
-                                height: 80,
-                                decoration: BoxDecoration(
-                                  color: primaryContainer,
-                                  shape: BoxShape.circle,
-                                  boxShadow: [
-                                    BoxShadow(
-                                      color: primaryContainer.withOpacity(0.4),
-                                      blurRadius: 25,
-                                      spreadRadius: 8,
-                                    ),
-                                  ],
-                                  border: Border.all(
-                                    color: primaryFixedDim.withOpacity(0.4),
-                                    width: 1.5,
-                                  ),
-                                ),
-                                child: const Icon(
-                                  Icons.auto_awesome,
-                                  color: Colors.white,
-                                  size: 32,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      const SizedBox(height: 40),
-
-                      // Intelligent Processing Steps (Bento vertical list)
-                      Column(
-                        children: List.generate(_stepLabels.length, (index) {
-                          final isCompleted = _isCompleted[index];
-                          final isActive = _activeStepIndex == index;
-                          return _buildStepTile(
-                            index: index,
-                            text: _stepLabels[index],
-                            isCompleted: isCompleted,
-                            isActive: isActive,
-                            primaryContainer: primaryContainer,
-                            primaryFixedDim: primaryFixedDim,
-                            textMint: textMint,
-                            outlineColor: outlineColor,
-                          );
-                        }),
-                      ),
-                      const SizedBox(height: 32),
-                    ],
-                  ),
-                ),
-              ),
-            ),
-            // Footer status
-            Padding(
-              padding: const EdgeInsets.only(bottom: 24.0, left: 20.0, right: 20.0),
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-                decoration: BoxDecoration(
-                  color: Colors.white.withOpacity(0.05),
-                  borderRadius: BorderRadius.circular(9999),
-                  border: Border.all(color: Colors.white.withOpacity(0.1)),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Container(
-                      width: 8,
-                      height: 8,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF71DAB1),
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 8),
-                    const Text(
-                      'SYSTEM SECURE & ENCRYPTED',
-                      style: TextStyle(
-                        color: Color(0xFFBDC9C5),
-                        fontSize: 11,
-                        fontWeight: FontWeight.bold,
-                        letterSpacing: 1.5,
-                        fontFamily: 'Plus Jakarta Sans',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildStepTile({
-    required int index,
-    required String text,
-    required bool isCompleted,
-    required bool isActive,
-    required Color primaryContainer,
-    required Color primaryFixedDim,
-    required Color textMint,
-    required Color outlineColor,
-  }) {
-    if (isCompleted) {
-      // Completed Step Styling
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.white.withOpacity(0.05),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.1)),
-          ),
-          child: Row(
-            children: [
-              Icon(Icons.check_circle, color: primaryFixedDim, size: 24),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: primaryFixedDim,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Plus Jakarta Sans',
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ),
-      );
-    } else if (isActive) {
-      // Active Step Styling
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: primaryContainer.withOpacity(0.1),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: primaryContainer.withOpacity(0.3)),
-          ),
-          child: Row(
-            children: [
-              const SizedBox(
-                width: 24,
-                height: 24,
-                child: CircularProgressIndicator(
-                  strokeWidth: 2.5,
-                  valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Text(
-                  text,
-                  style: TextStyle(
-                    color: textMint,
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    fontFamily: 'Plus Jakarta Sans',
-                  ),
-                ),
-              ),
-              const Icon(
-                Icons.location_on,
-                color: Color(0x807BD7C4),
-                size: 16,
-              ),
-            ],
-          ),
-        ),
-      );
-    } else {
-      // Pending Step Styling
-      return Padding(
-        padding: const EdgeInsets.only(bottom: 12.0),
-        child: Container(
-          padding: const EdgeInsets.all(12),
-          decoration: BoxDecoration(
-            color: Colors.transparent,
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: Colors.white.withOpacity(0.05)),
-          ),
-          child: Opacity(
-            opacity: 0.4,
-            child: Row(
+      backgroundColor: bg,
+      body: FadeTransition(
+        opacity: _fadeIn,
+        child: SafeArea(
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 24),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.radio_button_off, color: outlineColor, size: 24),
-                const SizedBox(width: 12),
-                Expanded(
-                  child: Text(
-                    text,
-                    style: TextStyle(
-                      color: outlineColor,
-                      fontSize: 14,
-                      fontWeight: FontWeight.w500,
-                      fontFamily: 'Plus Jakarta Sans',
-                    ),
+                // Header
+                const SizedBox(height: 20),
+                RichText(text: const TextSpan(children: [
+                  TextSpan(text: 'Hunar', style: TextStyle(color: accent, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
+                  TextSpan(text: 'Link', style: TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
+                  TextSpan(text: '  🇵🇰', style: TextStyle(fontSize: 18)),
+                ])),
+                const SizedBox(height: 40),
+
+                // Pulsing icon
+                Center(
+                  child: AnimatedBuilder(
+                    animation: _pulse,
+                    builder: (_, __) => Stack(alignment: Alignment.center, children: [
+                      Transform.scale(
+                        scale: _pulse.value,
+                        child: Container(
+                          width: 80, height: 80,
+                          decoration: BoxDecoration(shape: BoxShape.circle, color: accent.withAlpha(15)),
+                        ),
+                      ),
+                      Container(
+                        width: 64, height: 64,
+                        decoration: BoxDecoration(
+                          shape: BoxShape.circle, color: surface,
+                          border: Border.all(color: border, width: 1.5),
+                          boxShadow: [BoxShadow(color: ink.withAlpha(10), blurRadius: 16)],
+                        ),
+                        child: const Icon(Icons.auto_awesome_rounded, color: accent, size: 28),
+                      ),
+                    ]),
                   ),
                 ),
+                const SizedBox(height: 32),
+
+                // Title
+                const Center(
+                  child: Text('Finding your provider...', style: TextStyle(color: ink, fontSize: 22, fontWeight: FontWeight.w800, fontFamily: 'Plus Jakarta Sans')),
+                ),
+                const SizedBox(height: 6),
+                Center(
+                  child: Text(
+                    '"${widget.userInput}"',
+                    textAlign: TextAlign.center,
+                    maxLines: 2, overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(color: inkMid, fontSize: 13, fontStyle: FontStyle.italic, fontFamily: 'Plus Jakarta Sans'),
+                  ),
+                ),
+                const SizedBox(height: 40),
+
+                // Steps card
+                Container(
+                  decoration: BoxDecoration(
+                    color: surface, borderRadius: BorderRadius.circular(16),
+                    border: Border.all(color: border),
+                    boxShadow: [BoxShadow(color: ink.withAlpha(8), blurRadius: 12, offset: const Offset(0, 4))],
+                  ),
+                  padding: const EdgeInsets.all(20),
+                  child: Column(
+                    children: List.generate(_steps.length, (i) {
+                      final completed = _done[i];
+                      final isActive  = i == _active;
+                      return AnimatedOpacity(
+                        opacity: i <= _active ? 1.0 : 0.3,
+                        duration: const Duration(milliseconds: 400),
+                        child: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 7),
+                          child: Row(children: [
+                            AnimatedContainer(
+                              duration: const Duration(milliseconds: 300),
+                              width: 22, height: 22,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                color: completed ? accent : Colors.transparent,
+                                border: Border.all(
+                                  color: completed ? accent : isActive ? accent : numGray,
+                                  width: 1.5,
+                                ),
+                              ),
+                              child: completed ? const Icon(Icons.check, color: Colors.white, size: 13) : null,
+                            ),
+                            const SizedBox(width: 14),
+                            Expanded(child: Text(_steps[i], style: TextStyle(
+                              color: completed ? ink : isActive ? ink : inkMid,
+                              fontSize: 13.5, fontWeight: completed || isActive ? FontWeight.w600 : FontWeight.normal,
+                              fontFamily: 'Plus Jakarta Sans',
+                            ))),
+                            if (isActive) SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 1.5, color: accent)),
+                          ]),
+                        ),
+                      );
+                    }),
+                  ),
+                ),
+
+                const Spacer(),
+                Center(child: Text('Powered by Gemini 2.5 Flash · Google Places',
+                  style: TextStyle(color: numGray, fontSize: 11, fontFamily: 'Plus Jakarta Sans'))),
+                const SizedBox(height: 24),
               ],
             ),
           ),
-        ),
-      );
-    }
-  }
-}
-
-// Custom CircleAvatar implementation to handle custom borderWidths nicely
-class CircleAvatarWidget extends StatelessWidget {
-  final double radius;
-  final double borderWidth;
-  final Color borderColor;
-  final ImageProvider backgroundImage;
-
-  const CircleAvatarWidget({
-    super.key,
-    required this.radius,
-    required this.borderWidth,
-    required this.borderColor,
-    required this.backgroundImage,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radius * 2,
-      height: radius * 2,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: borderWidth,
-        ),
-        image: DecorationImage(
-          image: backgroundImage,
-          fit: BoxFit.cover,
         ),
       ),
     );

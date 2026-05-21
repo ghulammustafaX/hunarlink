@@ -11,9 +11,11 @@ dependencies:
     sdk: flutter
   firebase_core: ^4.9.0
   cloud_firestore: ^6.4.1
-  flutter_local_notifications: ^21.0.0
+  flutter_local_notifications: any
   http: ^1.6.0
   cupertino_icons: ^1.0.6
+  speech_to_text: ^7.4.0
+  geolocator: ^11.0.0
 
 dev_dependencies:
   flutter_test:

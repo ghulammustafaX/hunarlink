@@ -1,6 +1,6 @@
 require('dotenv').config();
 const express = require('express');
-const { runHunarLinkPipeline } = require('./agent');
+const antigravityAgent = require('./agent');
 
 const app = express();
 app.use(express.json());
@@ -26,12 +26,15 @@ app.get('/health', (req, res) => {
 
 // ── MAIN PIPELINE ENDPOINT ──────────────────────────────
 app.post('/request', async (req, res) => {
-  const { input, userId } = req.body;
+  const { input, userId, location } = req.body;
 
   console.log('\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
   console.log(`📥  Incoming Request`);
   console.log(`    Input  : "${input}"`);
   console.log(`    UserId : ${userId || 'user_001'}`);
+  if (location) {
+    console.log(`    Location : ${location}`);
+  }
   console.log('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
 
   if (!input || input.trim() === '') {
@@ -42,7 +45,13 @@ app.post('/request', async (req, res) => {
   }
 
   try {
-    const result = await runHunarLinkPipeline(input.trim(), userId || 'user_001');
+    const result = await antigravityAgent.run({
+      input: input.trim(),
+      userId: userId || 'user_001',
+      userLocation: location,
+      tools: ['parse_intent', 'fetch_maps_data', 'rank_and_select', 
+              'execute_booking', 'schedule_followup']
+    });
 
     if (!result) {
       console.error('❌ Pipeline returned null');
@@ -63,7 +72,9 @@ app.post('/request', async (req, res) => {
           rating:   result.selected?.rating,
           score:    result.selected?.score,
           address:  result.selected?.formattedAddress,
+          reasoning: result.ranking_reasoning || result.booking?.reasoning,
         },
+        reasoning: result.ranking_reasoning || result.booking?.reasoning,
         booking:  result.booking,
         reminder: result.reminder,
       },

@@ -1,572 +1,486 @@
 import 'package:flutter/material.dart';
 import 'booking_confirm_screen.dart';
 
-class ResultsScreen extends StatefulWidget {
+class ResultsScreen extends StatelessWidget {
   final Map<String, dynamic>? apiResult;
   const ResultsScreen({super.key, this.apiResult});
 
-  @override
-  State<ResultsScreen> createState() => _ResultsScreenState();
-}
+  static const Color bg       = Color(0xFFF7F2EA); // warm almond beige
+  static const Color surface  = Color(0xFFFFFFFF); // clean white
+  static const Color ink      = Color(0xFF1A1415); // deep charcoal
+  static const Color inkMid   = Color(0xFF6B5E58); // warm taupe
+  static const Color border   = Color(0xFFE4D9CF); // light warm border
+  static const Color accent   = Color(0xFF8C1616); // brand crimson
+  static const Color accentBg = Color(0xFFFFEBEB); // light pink-red tint
+  static const Color numGray  = Color(0xFFD4C8BC); // warm gray
 
-class _ResultsScreenState extends State<ResultsScreen> {
-  int _currentNavIndex = 2; // AI Assistant active by default in this flow
-
-  final List<Map<String, dynamic>> providers = const [
-    {
-      "name": "Zahid electrician",
-      "distance": "2.1 km",
-      "rating": "4.8",
-      "price": "Rs. 1,200",
-      "best": true,
-      "reasoning": "Closest available with highest rating",
-      "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAoHBS2x_7o59qdcpQTXqvgGLfIZvEQjEBP6Nb1xMXvnqdJcLsgDYsfFHu9sYfNm_g8JBVBOv1RDGpfY7v5xr8NikvYyYO_3zUI3tfgD_BGnTHXUVrhcQ4_N4g9wq3optmCg67t4ifnQ1aFODbe-tNe1fKug2HYIIX23OpBKLGpqEEma6XcnBdqNnjuBTMhFrilZej7bMzj94sM4R7J97qo2oC5v3bKKdAKFYWOZAVkMXETbeVXPf8_m8skCfBeBu3rmk_d0_vMvgo",
-    },
-    {
-      "name": "Imran Repair Services",
-      "distance": "4.5 km",
-      "rating": "4.6",
-      "price": "Rs. 950",
-      "best": false,
-      "reasoning": "Reliable option, slightly further away",
-      "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuARYsL_DdANjf4Efd_dCCtK654gEjHhQ0o5giF_IAxjHowr8TNc5wdwyKHGUddYvq7QGzEWbri5AkzmoIKvWOW-dV7rZ4DTmsKJZmZ-pooT7rCRBX4sLGY-nhM4Izd2BeanNh3n5wlpXuV4TH_xT89AI7KNI5-K_ENJ67JD9RroA-j6U_z96KINcW6KNqS6Onp_E6sfC-tu4XeF3NDQkuZXGYMtGOhGdhIBcqLOOMhCZFqrZ6m-DtSlJ-7WatJTkqDsvzs5PyYMKOs",
-    },
-    {
-      "name": "Asif Pro-Electric",
-      "distance": "5.2 km",
-      "rating": "4.9",
-      "price": "Rs. 1,500",
-      "best": false,
-      "reasoning": "Top rated specialist, premium pricing",
-      "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAJu8kaz1jVDexb2QVnUCqS7XBK4Vg2Ax7X6T4O51oavJcYt3SzSUjwxc9yFwm7TrPkfT5XOjjIAnrjJ9WG_XlaeL4kyx12EjRKcINlzqcAoDB6ltuYQBSw3sjSPgLQ48V3RzLuPIBylL05pZSAFjsIZ97GR4it1uPspEopvDhNwvsLjM_pe-F1yFU5CUiqMTVuLs7gmTAA4Ldj9tc29u4Z1-cqSA8jjg11niXYX0yjzVnSU2QwdI6ZsiohMqNhz85d2T86gxn1EUM",
+  String _asText(dynamic value, {String fallback = ''}) {
+    final text = value?.toString().trim();
+    if (text == null || text.isEmpty) {
+      return fallback;
     }
-  ];
-
-  List<Map<String, dynamic>> _getDynamicProviders() {
-    if (widget.apiResult != null && widget.apiResult!['data'] != null) {
-      final data = widget.apiResult!['data'];
-      final selected = data['selected'];
-      if (selected != null) {
-        return [
-          {
-            "name": selected['name'] ?? "Zahid electrician",
-            "distance": selected['distance'] ?? "2.1 km",
-            "rating": selected['rating']?.toString() ?? "4.8",
-            "price": "Rs. 1,200",
-            "best": true,
-            "reasoning": "Closest available with highest rating",
-            "imageUrl": "https://lh3.googleusercontent.com/aida-public/AB6AXuAoHBS2x_7o59qdcpQTXqvgGLfIZvEQjEBP6Nb1xMXvnqdJcLsgDYsfFHu9sYfNm_g8JBVBOv1RDGpfY7v5xr8NikvYyYO_3zUI3tfgD_BGnTHXUVrhcQ4_N4g9wq3optmCg67t4ifnQ1aFODbe-tNe1fKug2HYIIX23OpBKLGpqEEma6XcnBdqNnjuBTMhFrilZej7bMzj94sM4R7J97qo2oC5v3bKKdAKFYWOZAVkMXETbeVXPf8_m8skCfBeBu3rmk_d0_vMvgo",
-          },
-          ...providers.where((p) => p['best'] != true).toList()
-        ];
-      }
-    }
-    return providers;
+    return text;
   }
 
-  Widget _buildIntelligenceInsight(Color brandPrimary, Color textSecondary) {
-    String name = "Zahid electrician";
-    String details = " was selected as the best match due to their 100% completion rate for similar tasks and proximity, ensuring they can reach you in under 20 minutes.";
-    
-    if (widget.apiResult != null && widget.apiResult!['data'] != null) {
-      final data = widget.apiResult!['data'];
-      final selected = data['selected'];
-      if (selected != null) {
-        name = selected['name'] ?? "Zahid electrician";
-        final score = selected['score']?.toString() ?? "9.5";
-        final dist = selected['distance'] ?? "2.1 km";
-        details = " was selected as the best match by our Antigravity AI agent based on a rank score of $score, considering real-time Google Maps distance of $dist and historical star ratings.";
-      }
-    }
+  List<Map<String, dynamic>> _providers() {
+    final fallback = [
+      {'name': 'Zahid Electrician',    'distance': '2.1 km', 'rating': '4.8', 'price': 'Rs. 1,200', 'best': true,  'reasoning': 'Closest with highest rating in your area.'},
+      {'name': 'Imran Repair Services','distance': '4.5 km', 'rating': '4.6', 'price': 'Rs. 950',   'best': false, 'reasoning': 'Reliable option at a lower price.'},
+      {'name': 'Asif Pro-Electric',    'distance': '5.2 km', 'rating': '4.9', 'price': 'Rs. 1,500', 'best': false, 'reasoning': 'Top rated specialist, premium pricing.'},
+    ];
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: const Color(0xFFEFF4FF),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: brandPrimary.withOpacity(0.1)),
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Row(
-            children: [
-              const Icon(Icons.auto_awesome, color: brandPrimary, size: 20),
-              const SizedBox(width: 8),
-              Text(
-                'KHIDMAT INTELLIGENCE INSIGHT',
-                style: TextStyle(
-                  color: brandPrimary,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 11,
-                  letterSpacing: 1.2,
-                  fontFamily: 'Plus Jakarta Sans',
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          RichText(
-            text: TextSpan(
-              style: TextStyle(
-                color: textSecondary,
-                fontSize: 14,
-                height: 1.5,
-                fontFamily: 'Plus Jakarta Sans',
-              ),
-              children: [
-                const TextSpan(text: "We've analyzed nearby local providers for your request. "),
-                TextSpan(
-                  text: name,
-                  style: TextStyle(
-                    color: brandPrimary,
-                    fontWeight: FontWeight.bold,
-                  ),
-                ),
-                TextSpan(text: details),
-              ],
-            ),
-          ),
-        ],
-      ),
-    );
+    if (apiResult?['data']?['selected'] != null) {
+      final s = apiResult!['data']['selected'];
+      final reasoning = s['reasoning'] ?? apiResult!['data']['reasoning'] ?? 'Selected by HunarLink AI based on distance & rating.';
+      return [
+        {
+          'name': s['name'] ?? 'Zahid Electrician',
+          'distance': s['distance'] ?? '2.1 km',
+          'rating': s['rating']?.toString() ?? '4.8',
+          'price': 'Rs. 1,200',
+          'best': true,
+          'reasoning': reasoning
+        },
+        ...fallback.where((p) => p['best'] != true),
+      ];
+    }
+    return fallback;
+  }
+
+  String _intentText() {
+    if (apiResult?['data']?['intent'] != null) {
+      final i = apiResult!['data']['intent'];
+      final cat = i['service_category'] ?? i['service_type'] ?? 'Service';
+      final loc = i['location'] ?? 'Islamabad';
+      final time = i['time_preference'] ?? 'ASAP';
+      return '$cat  ·  $loc  ·  ${time.replaceAll('_', ' ')}';
+    }
+    return 'AC Technician  ·  G-13 Islamabad  ·  Tomorrow Morning';
   }
 
   @override
   Widget build(BuildContext context) {
-    // Brand Colors
-    const Color brandPrimary = Color(0xFF006053);
-    const Color brandPrimaryContainer = Color(0xFF0B7B6B);
-    const Color brandBackground = Color(0xFFF8F9FF);
-    const Color brandOnBackground = Color(0xFF0B1C30);
-    const Color textSecondary = Color(0xFF5D5F5F);
+    final providers = _providers();
 
     return Scaffold(
-      backgroundColor: brandBackground,
-      appBar: AppBar(
-        backgroundColor: brandBackground,
-        elevation: 0,
-        leading: IconButton(
-          icon: const Icon(Icons.menu, color: brandPrimary),
-          onPressed: () {},
-        ),
-        title: const Text(
-          'Khidmat AI 🇵🇰',
-          style: TextStyle(
-            color: brandPrimary,
-            fontWeight: FontWeight.bold,
-            fontSize: 20,
-            fontFamily: 'Plus Jakarta Sans',
-          ),
-        ),
-        actions: const [
-          Padding(
-            padding: EdgeInsets.only(right: 16.0),
-            child: CircleAvatar(
-              radius: 16,
-              borderWidth: 1,
-              borderColor: Color(0xFFBDC9C5),
-              backgroundImage: NetworkImage(
-                'https://lh3.googleusercontent.com/aida-public/AB6AXuC9aIXaronIGpgzCaAbT9OjTtcygqHlIA42R_nvvQapJQrjnukGOqJmTwzbYVMuRR2s-rkE52PJ8vGF89dqKO8udreKgnfD5sYjok1PiyFZ4sDGsJz8Lf8mLAmlz7kR8FV4KYm5n4wDJH1nGd-i5CATLMm7qNRr6QPoSml-3fMrkZt9rE1LPVrB8GthKh_zTW16Pqz1SXaZJ0EnKBThj9aitDqrBBRV6MLfa1p5TjRPLvEp5DrMfzS_rx5-r6ae2KseHr9clcKEeNY',
-              ),
-            ),
-          ),
-        ],
-      ),
-      body: SingleChildScrollView(
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 20.0),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const SizedBox(height: 16),
-              // Results Header
-              const Center(
-                child: Column(
-                  children: [
-                    Text(
-                      'Top Providers Found',
-                      style: TextStyle(
-                        fontSize: 24,
-                        fontWeight: FontWeight.bold,
-                        color: brandOnBackground,
-                        fontFamily: 'Plus Jakarta Sans',
-                      ),
-                    ),
-                    SizedBox(height: 4),
-                    Text(
-                      'AI selected matches based on your preferences',
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: textSecondary,
-                        fontFamily: 'Plus Jakarta Sans',
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 24),
-
-              // Provider Stack (Vertical List)
-              Column(
-                children: _getDynamicProviders().map((provider) {
-                  final isBest = provider['best'] == true;
-                  return _buildProviderCard(
-                    context: context,
-                    provider: provider,
-                    isBest: isBest,
-                    brandPrimary: brandPrimary,
-                    brandPrimaryContainer: brandPrimaryContainer,
-                    brandOnBackground: brandOnBackground,
-                    textSecondary: textSecondary,
-                  );
-                }).toList(),
-              ),
-
-              const SizedBox(height: 24),
-
-              // AI Reasoning Section (Khidmat Intelligence Insight)
-              _buildIntelligenceInsight(brandPrimary, textSecondary),
-              const SizedBox(height: 120), // Padding to avoid clipping with bottom nav
-            ],
-          ),
-        ),
-      ),
-      bottomNavigationBar: Container(
-        padding: const EdgeInsets.only(top: 8, bottom: 20, left: 16, right: 16),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: const BorderRadius.only(
-            topLeft: Radius.circular(16),
-            topRight: Radius.circular(16),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: brandPrimary.withOpacity(0.04),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            )
-          ],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceAround,
+      backgroundColor: bg,
+      body: SafeArea(
+        child: Column(
           children: [
-            _buildNavItem(0, Icons.home, 'Home', brandPrimaryContainer),
-            _buildNavItem(1, Icons.calendar_month, 'Bookings', brandPrimaryContainer),
-            _buildNavItem(2, Icons.auto_awesome, 'AI Assistant', brandPrimaryContainer),
-            _buildNavItem(3, Icons.person, 'Profile', brandPrimaryContainer),
-          ],
-        ),
-      ),
-    );
-  }
-
-  Widget _buildProviderCard({
-    required BuildContext context,
-    required Map<String, dynamic> provider,
-    required bool isBest,
-    required Color brandPrimary,
-    required Color brandPrimaryContainer,
-    required Color brandOnBackground,
-    required Color textSecondary,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 16),
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: isBest ? brandPrimaryContainer : Colors.black12.withOpacity(0.05),
-          width: isBest ? 2 : 1,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: brandPrimary.withOpacity(0.04),
-            blurRadius: 20,
-            offset: const Offset(0, 4),
-          )
-        ],
-      ),
-      child: Stack(
-        children: [
-          Column(
-            children: [
-              Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
+            // Custom Immersive Header
+            Container(
+              padding: const EdgeInsets.fromLTRB(24, 20, 24, 16),
+              decoration: const BoxDecoration(
+                color: bg,
+                border: Border(bottom: BorderSide(color: border, width: 0.8)),
+              ),
+              child: Row(
                 children: [
-                  // Provider Image
-                  Container(
-                    width: 80,
-                    height: 80,
-                    decoration: BoxDecoration(
-                      borderRadius: BorderRadius.circular(12),
-                      image: DecorationImage(
-                        image: NetworkImage(provider['imageUrl']),
-                        fit: BoxFit.cover,
+                  GestureDetector(
+                    onTap: () => Navigator.pop(context),
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ink.withOpacity(0.04),
+                            blurRadius: 10,
+                            offset: const Offset(0, 4),
+                          )
+                        ],
                       ),
+                      child: const Icon(Icons.arrow_back_ios_new_rounded, color: ink, size: 16),
                     ),
                   ),
                   const SizedBox(width: 16),
-                  // Provider Details
                   Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          provider['name'],
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: brandOnBackground,
-                            fontFamily: 'Plus Jakarta Sans',
+                        RichText(
+                          text: const TextSpan(
+                            children: [
+                              TextSpan(text: 'Hunar', style: TextStyle(color: accent, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
+                              TextSpan(text: 'Link', style: TextStyle(color: ink, fontSize: 20, fontWeight: FontWeight.w900, fontFamily: 'Plus Jakarta Sans')),
+                            ],
                           ),
                         ),
-                        const SizedBox(height: 6),
-                        Row(
-                          children: [
-                            Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                              decoration: BoxDecoration(
-                                color: const Color(0xFFF1F5F9),
-                                borderRadius: BorderRadius.circular(8),
-                              ),
-                              child: Text(
-                                '📍 ${provider['distance']}',
-                                style: const TextStyle(
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color(0xFF5D5F5F),
-                                  fontFamily: 'Plus Jakarta Sans',
-                                ),
-                              ),
-                            ),
-                            const SizedBox(width: 12),
-                            Row(
-                              children: [
-                                Icon(Icons.star, color: brandPrimary, size: 16),
-                                const SizedBox(width: 3),
-                                Text(
-                                  provider['rating'],
-                                  style: TextStyle(
-                                    fontSize: 13,
-                                    fontWeight: FontWeight.bold,
-                                    color: brandPrimary,
-                                    fontFamily: 'Plus Jakarta Sans',
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ],
+                        const SizedBox(height: 2),
+                        const Text(
+                          'AI Service Matching Results',
+                          style: TextStyle(color: inkMid, fontSize: 11, fontWeight: FontWeight.w600, fontFamily: 'Plus Jakarta Sans'),
                         ),
-                        if (isBest) ...[
-                          const SizedBox(height: 8),
-                          Text(
-                            '"${provider['reasoning']}"',
-                            style: const TextStyle(
-                              color: Color(0xFF006147),
-                              fontSize: 12,
-                              fontStyle: FontStyle.italic,
-                              fontWeight: FontWeight.w500,
-                              fontFamily: 'Plus Jakarta Sans',
-                            ),
-                          ),
-                        ],
                       ],
                     ),
                   ),
                 ],
               ),
-              const SizedBox(height: 16),
-              // Action Bottom Bar
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      const Text(
-                        'STARTING FROM',
-                        style: TextStyle(
-                          fontSize: 10,
-                          color: Color(0x9A3E4946),
-                          fontWeight: FontWeight.bold,
-                          letterSpacing: 0.5,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                      ),
-                      const SizedBox(height: 2),
-                      Text(
-                        provider['price'],
-                        style: TextStyle(
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                          color: isBest ? brandPrimary : brandOnBackground,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                      ),
-                    ],
-                  ),
-                  SizedBox(
-                    height: 44,
-                    child: ElevatedButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (_) => BookingConfirmScreen(provider: provider),
-                          ),
-                        );
-                      },
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: isBest ? brandPrimaryContainer : Colors.transparent,
-                        foregroundColor: isBest ? Colors.white : brandPrimaryContainer,
-                        elevation: isBest ? 2 : 0,
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
-                          side: isBest
-                              ? BorderSide.none
-                              : BorderSide(color: brandPrimaryContainer, width: 2),
-                        ),
-                        padding: const EdgeInsets.symmetric(horizontal: 24),
-                      ),
-                      child: const Text(
-                        'Book Now',
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 14,
-                          fontFamily: 'Plus Jakarta Sans',
-                        ),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          if (isBest)
-            Positioned(
-              top: 0,
-              right: 0,
-              child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: const Color(0xFFE8F5E9),
-                  borderRadius: BorderRadius.circular(99),
-                ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
+            ),
+
+            // Scrollable Results Panel
+            Expanded(
+              child: SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(24, 16, 24, 32),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      'BEST MATCH',
-                      style: TextStyle(
-                        color: Color(0xFF2E7D32),
-                        fontWeight: FontWeight.bold,
-                        fontSize: 9,
-                        letterSpacing: 0.5,
-                        fontFamily: 'Plus Jakarta Sans',
+                    // Intent Summary Card with Glassmorphic overlay look
+                    Container(
+                      padding: const EdgeInsets.all(18),
+                      decoration: BoxDecoration(
+                        color: surface,
+                        borderRadius: BorderRadius.circular(16),
+                        border: Border.all(color: border),
+                        boxShadow: [
+                          BoxShadow(
+                            color: ink.withOpacity(0.03),
+                            blurRadius: 20,
+                            offset: const Offset(0, 8),
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.all(12),
+                            decoration: BoxDecoration(
+                              color: accentBg,
+                              borderRadius: BorderRadius.circular(12),
+                            ),
+                            child: const Icon(Icons.psychology_rounded, color: accent, size: 24),
+                          ),
+                          const SizedBox(width: 16),
+                          Expanded(
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                const Text(
+                                  'PARSED AI INTENT',
+                                  style: TextStyle(
+                                    color: accent,
+                                    fontSize: 10,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 1.5,
+                                    fontFamily: 'Plus Jakarta Sans',
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  _intentText(),
+                                  style: const TextStyle(
+                                    color: ink,
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w700,
+                                    fontFamily: 'Plus Jakarta Sans',
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
                       ),
                     ),
-                    SizedBox(width: 3),
-                    Icon(
-                      Icons.check_circle,
-                      color: Color(0xFF2E7D32),
-                      size: 11,
-                    )
+                    const SizedBox(height: 28),
+
+                    // Title
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'MATCHED PROFESSIONALS',
+                          style: TextStyle(
+                            color: numGray,
+                            fontSize: 11,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 1.5,
+                            fontFamily: 'Plus Jakarta Sans',
+                          ),
+                        ),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: border.withOpacity(0.4),
+                            borderRadius: BorderRadius.circular(12),
+                          ),
+                          child: Text(
+                            '${providers.length} Found',
+                            style: const TextStyle(color: inkMid, fontSize: 10, fontWeight: FontWeight.bold, fontFamily: 'Plus Jakarta Sans'),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 14),
+
+                    // Cards list
+                    ...providers.asMap().entries.map((e) => _providerCard(context, e.value, e.key)),
                   ],
                 ),
               ),
             ),
-        ],
+          ],
+        ),
       ),
     );
   }
 
-  Widget _buildNavItem(int index, IconData icon, String label, Color primaryColor) {
-    final isSelected = _currentNavIndex == index;
-    return isSelected
-        ? Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 6),
-            decoration: BoxDecoration(
-              color: primaryColor,
-              borderRadius: BorderRadius.circular(9999),
-            ),
-            child: Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Icon(icon, color: Colors.white, size: 20),
-                const SizedBox(width: 4),
-                Text(
-                  label,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 12,
-                    fontWeight: FontWeight.w500,
-                    fontFamily: 'Plus Jakarta Sans',
-                  ),
-                ),
-              ],
-            ),
+  Widget _providerCard(BuildContext context, Map<String, dynamic> p, int idx) {
+    final isBest = p['best'] == true;
+    final providerName = _asText(p['name'], fallback: 'Service Provider');
+    final providerRating = _asText(p['rating'], fallback: '4.8');
+    final providerDistance = _asText(p['distance'], fallback: '2.1 km');
+    final providerPrice = _asText(p['price'], fallback: 'Rs. 1,200');
+    final providerReasoning = _asText(p['reasoning'], fallback: 'Selected by HunarLink AI.');
+    final providerInitial = providerName.isNotEmpty ? providerName.substring(0, 1).toUpperCase() : 'S';
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 16),
+      decoration: BoxDecoration(
+        color: surface,
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: isBest ? accent : border, width: isBest ? 2 : 1),
+        boxShadow: [
+          BoxShadow(
+            color: ink.withOpacity(isBest ? 0.08 : 0.03),
+            blurRadius: isBest ? 24 : 12,
+            offset: const Offset(0, 6),
           )
-        : GestureDetector(
-            onTap: () {
-              setState(() {
-                _currentNavIndex = index;
-              });
-            },
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(icon, color: const Color(0xFF3E4946), size: 20),
-                  const SizedBox(height: 2),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // Ribbon / Top picker bar
+          if (isBest)
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 18, vertical: 8),
+              decoration: const BoxDecoration(
+                color: accent,
+                borderRadius: BorderRadius.only(
+                  topLeft: Radius.circular(17),
+                  topRight: Radius.circular(17),
+                ),
+              ),
+              child: Row(
+                children: const [
+                  Icon(Icons.auto_awesome, color: Colors.white, size: 14),
+                  SizedBox(width: 8),
                   Text(
-                    label,
-                    style: const TextStyle(
-                      color: Color(0xFF3E4946),
+                    'HUNARLINK RECOMMENDED TOP PICK',
+                    style: TextStyle(
+                      color: Colors.white,
                       fontSize: 10,
+                      fontWeight: FontWeight.w900,
+                      letterSpacing: 1.0,
                       fontFamily: 'Plus Jakarta Sans',
                     ),
                   ),
                 ],
               ),
             ),
-          );
-  }
-}
 
-// Custom CircleAvatar Helper
-class CircleAvatar extends StatelessWidget {
-  final double radius;
-  final double borderWidth;
-  final Color borderColor;
-  final ImageProvider backgroundImage;
+          Padding(
+            padding: const EdgeInsets.all(20),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Row(
+                  crossAxisAlignment: CrossAxisAlignment.center,
+                  children: [
+                    // Profile Image Frame
+                    Container(
+                      width: 56,
+                      height: 56,
+                      decoration: BoxDecoration(
+                        color: isBest ? accentBg : const Color(0xFFF0E8E0),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: isBest ? accent.withOpacity(0.3) : border,
+                          width: 2,
+                        ),
+                      ),
+                      child: Center(
+                        child: Text(
+                          providerInitial,
+                          style: TextStyle(
+                            color: isBest ? accent : ink,
+                            fontSize: 22,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'Plus Jakarta Sans',
+                          ),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 16),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            providerName,
+                            style: const TextStyle(
+                              color: ink,
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              fontFamily: 'Plus Jakarta Sans',
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Row(
+                            children: [
+                              // Rating Badge
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                                decoration: BoxDecoration(
+                                  color: const Color(0xFFFFECE0),
+                                  borderRadius: BorderRadius.circular(8),
+                                ),
+                                child: Row(
+                                  children: [
+                                    const Icon(Icons.star_rounded, color: Colors.orange, size: 14),
+                                    const SizedBox(width: 4),
+                                    Text(
+                                      providerRating,
+                                      style: const TextStyle(
+                                        color: Color(0xFFC25D00),
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.w800,
+                                        fontFamily: 'Plus Jakarta Sans',
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                              // Distance indicator
+                              const Icon(Icons.navigation_rounded, color: accent, size: 14),
+                              const SizedBox(width: 4),
+                              Text(
+                                providerDistance,
+                                style: const TextStyle(
+                                  color: inkMid,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w600,
+                                  fontFamily: 'Plus Jakarta Sans',
+                                ),
+                              ),
+                            ],
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+                
+                const SizedBox(height: 18),
+                Divider(height: 1, color: border.withOpacity(0.6)),
+                const SizedBox(height: 18),
 
-  const CircleAvatar({
-    super.key,
-    required this.radius,
-    required this.borderWidth,
-    required this.borderColor,
-    required this.backgroundImage,
-  });
+                // Pricing and Action Panel
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Text(
+                          'Estimated Fair Price',
+                          style: TextStyle(color: inkMid, fontSize: 11, fontWeight: FontWeight.w500, fontFamily: 'Plus Jakarta Sans'),
+                        ),
+                        const SizedBox(height: 2),
+                        Text(
+                          providerPrice,
+                          style: const TextStyle(
+                            color: ink,
+                            fontSize: 20,
+                            fontWeight: FontWeight.w900,
+                            fontFamily: 'Plus Jakarta Sans',
+                          ),
+                        ),
+                      ],
+                    ),
+                    ElevatedButton(
+                      onPressed: () => Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (_) => BookingConfirmScreen(provider: p),
+                        ),
+                      ),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: isBest ? accent : surface,
+                        foregroundColor: isBest ? Colors.white : accent,
+                        elevation: isBest ? 2 : 0,
+                        side: BorderSide(color: accent, width: 1.5),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(12),
+                        ),
+                        padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 12),
+                      ),
+                      child: Row(
+                        children: [
+                          Text(
+                            'Book Now',
+                            style: TextStyle(
+                              fontWeight: FontWeight.w800,
+                              fontSize: 14,
+                              color: isBest ? Colors.white : accent,
+                              fontFamily: 'Plus Jakarta Sans',
+                            ),
+                          ),
+                          const SizedBox(width: 6),
+                          Icon(
+                            Icons.arrow_forward_rounded,
+                            size: 16,
+                            color: isBest ? Colors.white : accent,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
 
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      width: radius * 2,
-      height: radius * 2,
-      decoration: BoxDecoration(
-        shape: BoxShape.circle,
-        border: Border.all(
-          color: borderColor,
-          width: borderWidth,
-        ),
-        image: DecorationImage(
-          image: backgroundImage,
-          fit: BoxFit.cover,
-        ),
+                // AI Matching Reasoning Block
+                if (isBest) ...[
+                  const SizedBox(height: 16),
+                  Container(
+                    padding: const EdgeInsets.all(14),
+                    decoration: BoxDecoration(
+                      color: accentBg,
+                      borderRadius: BorderRadius.circular(12),
+                      border: Border.all(color: accent.withOpacity(0.12)),
+                    ),
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        const Padding(
+                          padding: EdgeInsets.only(top: 2.0),
+                          child: Icon(Icons.auto_awesome, color: accent, size: 15),
+                        ),
+                        const SizedBox(width: 10),
+                        Expanded(
+                          child: Text(
+                            providerReasoning,
+                            style: const TextStyle(
+                              color: accent,
+                              fontSize: 12.5,
+                              height: 1.4,
+                              fontWeight: FontWeight.w600,
+                              fontFamily: 'Plus Jakarta Sans',
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
       ),
     );
   }

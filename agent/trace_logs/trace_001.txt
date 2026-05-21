@@ -1,15 +1,10 @@
-◇ injected env (4) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (7) from .env // tip: ⌁ auth for agents [www.vestauth.com]
+◇ injected env (0) from .env // tip: ◈ secrets for agents [www.dotenvx.com]
 ◇ injected env (0) from .env // tip: ⌘ override existing { override: true }
-◇ injected env (0) from .env // tip: ⌘ enable debugging { debug: true }
 
-═══════════════════════════════════════════════════
-       HUNARLINK — ANTIGRAVITY PIPELINE START       
-═══════════════════════════════════════════════════
-  Input : "Mujhe G-13 mein kal subah AC technician chahiye"
-  User  : user_test_123
-═══════════════════════════════════════════════════
-
-[01] parse_intent INVOKED
+==================================================
+🤖 STARTING ANTIGRAVITY AGENT: HunarLinkOrchestrator
+==================================================
 --- Running parse_intent ---
 Input: "Mujhe G-13 mein kal subah AC technician chahiye"
      [MOCK MODE] Skipping Gemini API
@@ -18,36 +13,82 @@ Input: "Mujhe G-13 mein kal subah AC technician chahiye"
   location: 'G-13 Islamabad',
   time_preference: 'tomorrow_morning'
 }
-     ✅ service_category : AC Technician
-     ✅ location         : G-13 Islamabad
-     ✅ time_preference  : tomorrow_morning
 
-[02] fetch_maps_data INVOKED
+◇ [Trace Event] Step 1
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "parse_intent",
+  "step": 1,
+  "input": {
+    "userText": "Mujhe G-13 mein kal subah AC technician chahiye"
+  },
+  "reasoning": "Detected Roman Urdu. Extracting service, location, time.",
+  "output": {
+    "service_category": "AC Technician",
+    "location": "G-13 Islamabad",
+    "time_preference": "tomorrow_morning"
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running fetch_google_maps_data ---
 Querying: "AC Technician" near "G-13 Islamabad"
-Found 10 providers
-     ✅ 10 providers fetched from Google Maps
+     [MOCK MODE] Returning mock provider dataset with GPS distances
+     [Distance Matrix] Calculating real GPS distances for 5 providers...
+     ✅ Abbasi Electric & AC Repair: 4.9 km (7 mins drive)
+     ✅ Raja AC Services Islamabad: 4.3 km (7 mins drive)
+     ✅ Khan Brothers Technicians: 5.8 km (10 mins drive)
+     ✅ Al-Madina Home Services: 5.5 km (9 mins drive)
+     ✅ Islamabad Quick Fix: 5.5 km (9 mins drive)
+Found 5 mock providers
 
-[03] rank_and_select INVOKED
+◇ [Trace Event] Step 2
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "fetch_maps_data",
+  "step": 2,
+  "input": {
+    "serviceCategory": "AC Technician",
+    "location": "G-13 Islamabad"
+  },
+  "reasoning": "Querying Places API for 'AC Technician' near 'G-13 Islamabad'.",
+  "output": "5 providers found",
+  "duration_ms": 1096,
+  "status": "success"
+}
 
 --- Running rank_and_select ---
 
      Rankings:
-     1. Abbasi Electric & AC Repair Center — Score: 0.99 | 1 km | ⭐ 4.9
-     2. Mehran Experts — Score: 0.99 | 1.8 km | ⭐ 4.9
-     3. Top Tech Cool Engineering — Score: 0.95 | 1.4 km | ⭐ 4.3
+     1. Abbasi Electric & AC Repair — Score: 0.83 | 4.9 km | ⭐ 4.9
+     2. Raja AC Services Islamabad — Score: 0.82 | 4.3 km | ⭐ 4.7
+     3. Khan Brothers Technicians — Score: 0.81 | 5.8 km | ⭐ 4.6
 
-     Selected: Abbasi Electric & AC Repair Center
-     ✅ Selected  : Abbasi Electric & AC Repair Center
-     ✅ Score     : 0.99
-     ✅ Distance  : 1 km
-     ✅ Rating    : 4.9
+     Selected: Abbasi Electric & AC Repair
 
-[04] execute_booking INVOKED
+◇ [Trace Event] Step 3
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "rank_and_select",
+  "step": 3,
+  "input": {
+    "providersCount": 5,
+    "time_preference": "tomorrow_morning"
+  },
+  "reasoning": "Scoring and ranking providers using proximity (40%), rating (35%), and availability (25%).",
+  "output": {
+    "name": "Abbasi Electric & AC Repair",
+    "distance": "4.9 km",
+    "rating": 4.9,
+    "score": 0.83
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running execute_booking ---
-Booking: Abbasi Electric & AC Repair Center for user user_test_123
+Booking: Abbasi Electric & AC Repair for user user_test_123
 
 Query: "G-13"
 Status: OK
@@ -60,6 +101,78 @@ Found: G-13 at G-13, Islamabad, Pakistan
 Query: "G-13 Islamabad"
 Status: OK
 Found: G-13 at G-13, Islamabad, Pakistan
+✅ Firebase write success — booking_id: BK-1779233198620
+✅ Document path: active_bookings/user_test_123
+
+◇ [Trace Event] Step 4
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "execute_booking",
+  "step": 4,
+  "input": {
+    "selectedProvider": "Abbasi Electric & AC Repair",
+    "userId": "user_test_123"
+  },
+  "reasoning": "Simulating booking execution. Writing confirmation document to active_bookings/user_test_123.",
+  "output": {
+    "booking_id": "BK-1779233198620",
+    "user_id": "user_test_123",
+    "status": "confirmed",
+    "provider_name": "Abbasi Electric & AC Repair",
+    "service_category": "AC Technician",
+    "service_time": "10:00 AM Tomorrow",
+    "provider_distance": "4.9 km",
+    "provider_rating": "4.9",
+    "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+    "created_at": "2026-05-19T23:26:38.620Z",
+    "reminder_at": "2026-05-20T23:26:38.633Z"
+  },
+  "duration_ms": 2967,
+  "status": "success"
+}
+
+--- Running schedule_followup ---
+Reminder scheduled for: 2026-05-20T23:26:38.633Z
+
+◇ [Trace Event] Step 5
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "schedule_followup",
+  "step": 5,
+  "input": {
+    "booking_id": "BK-1779233198620"
+  },
+  "reasoning": "Booking confirmed. Generating reminder payload and scheduling follow-up notification.",
+  "output": {
+    "booking_id": "BK-1779233198620",
+    "trigger_at": "2026-05-20T23:26:38.633Z",
+    "message": "Reminder: Abbasi Electric & AC Repair arrives in 1 hour.",
+    "status": "reminder_scheduled"
+  },
+  "duration_ms": 0,
+  "status": "success"
+}
+
+==================================================
+🤖 AGENT RUN COMPLETE
+==================================================
+
+Final result: {
+  "booking_id": "BK-1779233198620",
+  "user_id": "user_test_123",
+  "status": "confirmed",
+  "provider_name": "Abbasi Electric & AC Repair",
+  "service_category": "AC Technician",
+  "service_time": "10:00 AM Tomorrow",
+  "provider_distance": "4.9 km",
+  "provider_rating": "4.9",
+  "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+  "created_at": "2026-05-19T23:26:38.620Z",
+  "reminder_at": "2026-05-20T23:26:38.633Z"
+}
+
+-------------------------------------------
+
 
 Query: "Sector G-13, Islamabad"
 Status: OK
@@ -72,62 +185,14 @@ Found: F-8 at F-8, Islamabad, Pakistan
 Query: "F-8, Islamabad"
 Status: OK
 Found: F-8 at F-8, Islamabad, Pakistan
-✅ Firebase write success — booking_id: BK-1779101586705
-✅ Document path: active_bookings/user_test_123
-     ✅ booking_id : BK-1779101586705
-     ✅ status     : confirmed
-     ✅ Firebase   : active_bookings/user_test_123
-
-[05] schedule_followup INVOKED
-
---- Running schedule_followup ---
-Reminder scheduled for: 2026-05-19T10:53:06.706Z
-     ✅ Reminder   : 2026-05-19T10:53:06.706Z
-     ✅ Message    : Reminder: Abbasi Electric & AC Repair Center arrives in 1 hour.
-
-═══════════════════════════════════════════════════
-       PIPELINE COMPLETE ✅                         
-═══════════════════════════════════════════════════
-
-  Final Booking Summary:
-  ├─ Booking ID : BK-1779101586705
-  ├─ Provider   : Abbasi Electric & AC Repair Center
-  ├─ Service    : AC Technician
-  ├─ Location   : G-13 Islamabad
-  ├─ Time       : 10:00 AM Tomorrow
-  ├─ Distance   : 1 km
-  ├─ Rating     : 4.9
-  └─ Reminder   : 2026-05-19T10:53:06.706Z
-═══════════════════════════════════════════════════
-
-Final result: {
-  "booking_id": "BK-1779101586705",
-  "user_id": "user_test_123",
-  "status": "confirmed",
-  "provider_name": "Abbasi Electric & AC Repair Center",
-  "service_time": "10:00 AM Tomorrow",
-  "provider_distance": "1 km",
-  "provider_rating": "4.9",
-  "reasoning": "Selected as the closest available provider with a 4.9 rating.",
-  "created_at": "2026-05-18T10:53:06.705Z",
-  "reminder_at": "2026-05-19T10:53:06.706Z"
-}
-
--------------------------------------------
-
 
 Query: "Sector F-8, Islamabad"
 Status: OK
 Found: F-8 at F-8, Islamabad, Pakistan
 
-═══════════════════════════════════════════════════
-       HUNARLINK — ANTIGRAVITY PIPELINE START       
-═══════════════════════════════════════════════════
-  Input : "Plumber chahiye F-8 mein aaj"
-  User  : user_test_123
-═══════════════════════════════════════════════════
-
-[01] parse_intent INVOKED
+==================================================
+🤖 STARTING ANTIGRAVITY AGENT: HunarLinkOrchestrator
+==================================================
 --- Running parse_intent ---
 Input: "Plumber chahiye F-8 mein aaj"
      [MOCK MODE] Skipping Gemini API
@@ -136,88 +201,158 @@ Input: "Plumber chahiye F-8 mein aaj"
   location: 'F-8 Islamabad',
   time_preference: 'today'
 }
-     ✅ service_category : Plumber
-     ✅ location         : F-8 Islamabad
-     ✅ time_preference  : today
 
-[02] fetch_maps_data INVOKED
+◇ [Trace Event] Step 1
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "parse_intent",
+  "step": 1,
+  "input": {
+    "userText": "Plumber chahiye F-8 mein aaj"
+  },
+  "reasoning": "Detected Roman Urdu. Extracting service, location, time.",
+  "output": {
+    "service_category": "Plumber",
+    "location": "F-8 Islamabad",
+    "time_preference": "today"
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running fetch_google_maps_data ---
 Querying: "Plumber" near "F-8 Islamabad"
-Found 10 providers
-     ✅ 10 providers fetched from Google Maps
+     [MOCK MODE] Returning mock provider dataset with GPS distances
+     [Distance Matrix] Calculating real GPS distances for 5 providers...
+     ✅ Abbasi Electric & AC Repair: 5.3 km (9 mins drive)
+     ✅ Raja AC Services Islamabad: 4.7 km (9 mins drive)
+     ✅ Khan Brothers Technicians: 6.2 km (13 mins drive)
+     ✅ Al-Madina Home Services: 5.1 km (9 mins drive)
+     ✅ Islamabad Quick Fix: 6.8 km (11 mins drive)
+Found 5 mock providers
 
-[03] rank_and_select INVOKED
+◇ [Trace Event] Step 2
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "fetch_maps_data",
+  "step": 2,
+  "input": {
+    "serviceCategory": "Plumber",
+    "location": "F-8 Islamabad"
+  },
+  "reasoning": "Querying Places API for 'Plumber' near 'F-8 Islamabad'.",
+  "output": "5 providers found",
+  "duration_ms": 255,
+  "status": "success"
+}
 
 --- Running rank_and_select ---
 
      Rankings:
-     1. Islamabad plumber Electrical And AC Work... — Score: 1 | 1.8 km | ⭐ 5
-     2. Usman Engineering & Co — Score: 0.99 | 1.4 km | ⭐ 4.9
-     3. The Handyman Pvt. Limited — Score: 0.94 | 1 km | ⭐ 4.1
+     1. Abbasi Electric & AC Repair — Score: 0.83 | 5.3 km | ⭐ 4.9
+     2. Raja AC Services Islamabad — Score: 0.82 | 4.7 km | ⭐ 4.7
+     3. Al-Madina Home Services — Score: 0.8 | 5.1 km | ⭐ 4.4
 
-     Selected: Islamabad plumber Electrical And AC Work...
-     ✅ Selected  : Islamabad plumber Electrical And AC Work...
-     ✅ Score     : 1
-     ✅ Distance  : 1.8 km
-     ✅ Rating    : 5
+     Selected: Abbasi Electric & AC Repair
 
-[04] execute_booking INVOKED
+◇ [Trace Event] Step 3
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "rank_and_select",
+  "step": 3,
+  "input": {
+    "providersCount": 5,
+    "time_preference": "today"
+  },
+  "reasoning": "Scoring and ranking providers using proximity (40%), rating (35%), and availability (25%).",
+  "output": {
+    "name": "Abbasi Electric & AC Repair",
+    "distance": "5.3 km",
+    "rating": 4.9,
+    "score": 0.83
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running execute_booking ---
-Booking: Islamabad plumber Electrical And AC Work... for user user_test_123
-✅ Firebase write success — booking_id: BK-1779101594008
+Booking: Abbasi Electric & AC Repair for user user_test_123
+✅ Firebase write success — booking_id: BK-1779233204848
 ✅ Document path: active_bookings/user_test_123
-     ✅ booking_id : BK-1779101594008
-     ✅ status     : confirmed
-     ✅ Firebase   : active_bookings/user_test_123
 
-[05] schedule_followup INVOKED
+◇ [Trace Event] Step 4
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "execute_booking",
+  "step": 4,
+  "input": {
+    "selectedProvider": "Abbasi Electric & AC Repair",
+    "userId": "user_test_123"
+  },
+  "reasoning": "Simulating booking execution. Writing confirmation document to active_bookings/user_test_123.",
+  "output": {
+    "booking_id": "BK-1779233204848",
+    "user_id": "user_test_123",
+    "status": "confirmed",
+    "provider_name": "Abbasi Electric & AC Repair",
+    "service_category": "Plumber",
+    "service_time": "Today",
+    "provider_distance": "5.3 km",
+    "provider_rating": "4.9",
+    "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+    "created_at": "2026-05-19T23:26:44.848Z",
+    "reminder_at": "2026-05-20T23:26:44.848Z"
+  },
+  "duration_ms": 406,
+  "status": "success"
+}
 
 --- Running schedule_followup ---
-Reminder scheduled for: 2026-05-19T10:53:14.008Z
-     ✅ Reminder   : 2026-05-19T10:53:14.008Z
-     ✅ Message    : Reminder: Islamabad plumber Electrical And AC Work... arrives in 1 hour.
+Reminder scheduled for: 2026-05-20T23:26:44.848Z
 
-═══════════════════════════════════════════════════
-       PIPELINE COMPLETE ✅                         
-═══════════════════════════════════════════════════
+◇ [Trace Event] Step 5
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "schedule_followup",
+  "step": 5,
+  "input": {
+    "booking_id": "BK-1779233204848"
+  },
+  "reasoning": "Booking confirmed. Generating reminder payload and scheduling follow-up notification.",
+  "output": {
+    "booking_id": "BK-1779233204848",
+    "trigger_at": "2026-05-20T23:26:44.848Z",
+    "message": "Reminder: Abbasi Electric & AC Repair arrives in 1 hour.",
+    "status": "reminder_scheduled"
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
-  Final Booking Summary:
-  ├─ Booking ID : BK-1779101594008
-  ├─ Provider   : Islamabad plumber Electrical And AC Work...
-  ├─ Service    : Plumber
-  ├─ Location   : F-8 Islamabad
-  ├─ Time       : Today
-  ├─ Distance   : 1.8 km
-  ├─ Rating     : 5
-  └─ Reminder   : 2026-05-19T10:53:14.008Z
-═══════════════════════════════════════════════════
+==================================================
+🤖 AGENT RUN COMPLETE
+==================================================
 
 Final result: {
-  "booking_id": "BK-1779101594008",
+  "booking_id": "BK-1779233204848",
   "user_id": "user_test_123",
   "status": "confirmed",
-  "provider_name": "Islamabad plumber Electrical And AC Work...",
+  "provider_name": "Abbasi Electric & AC Repair",
+  "service_category": "Plumber",
   "service_time": "Today",
-  "provider_distance": "1.8 km",
-  "provider_rating": "5",
-  "reasoning": "Selected as the closest available provider with a 5 rating.",
-  "created_at": "2026-05-18T10:53:14.008Z",
-  "reminder_at": "2026-05-19T10:53:14.008Z"
+  "provider_distance": "5.3 km",
+  "provider_rating": "4.9",
+  "reasoning": "Selected as the closest available provider with a 4.9 rating.",
+  "created_at": "2026-05-19T23:26:44.848Z",
+  "reminder_at": "2026-05-20T23:26:44.848Z"
 }
 
 -------------------------------------------
 
 
-═══════════════════════════════════════════════════
-       HUNARLINK — ANTIGRAVITY PIPELINE START       
-═══════════════════════════════════════════════════
-  Input : "Need electrician in I-8 urgent"
-  User  : user_test_123
-═══════════════════════════════════════════════════
-
-[01] parse_intent INVOKED
+==================================================
+🤖 STARTING ANTIGRAVITY AGENT: HunarLinkOrchestrator
+==================================================
 --- Running parse_intent ---
 Input: "Need electrician in I-8 urgent"
      [MOCK MODE] Skipping Gemini API
@@ -226,75 +361,150 @@ Input: "Need electrician in I-8 urgent"
   location: 'I-8 Islamabad',
   time_preference: 'today_urgent'
 }
-     ✅ service_category : Electrician
-     ✅ location         : I-8 Islamabad
-     ✅ time_preference  : today_urgent
 
-[02] fetch_maps_data INVOKED
+◇ [Trace Event] Step 1
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "parse_intent",
+  "step": 1,
+  "input": {
+    "userText": "Need electrician in I-8 urgent"
+  },
+  "reasoning": "Detected Roman Urdu. Extracting service, location, time.",
+  "output": {
+    "service_category": "Electrician",
+    "location": "I-8 Islamabad",
+    "time_preference": "today_urgent"
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running fetch_google_maps_data ---
 Querying: "Electrician" near "I-8 Islamabad"
-Found 10 providers
-     ✅ 10 providers fetched from Google Maps
+     [MOCK MODE] Returning mock provider dataset with GPS distances
+     [Distance Matrix] Calculating real GPS distances for 5 providers...
+     ✅ Abbasi Electric & AC Repair: 10.6 km (15 mins drive)
+     ✅ Raja AC Services Islamabad: 10 km (15 mins drive)
+     ✅ Khan Brothers Technicians: 11.5 km (19 mins drive)
+     ✅ Al-Madina Home Services: 8.4 km (13 mins drive)
+     ✅ Islamabad Quick Fix: 2.8 km (7 mins drive)
+Found 5 mock providers
 
-[03] rank_and_select INVOKED
+◇ [Trace Event] Step 2
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "fetch_maps_data",
+  "step": 2,
+  "input": {
+    "serviceCategory": "Electrician",
+    "location": "I-8 Islamabad"
+  },
+  "reasoning": "Querying Places API for 'Electrician' near 'I-8 Islamabad'.",
+  "output": "5 providers found",
+  "duration_ms": 236,
+  "status": "success"
+}
 
 --- Running rank_and_select ---
 
      Rankings:
-     1. ASAD MAHMOOD HOME SERVICES — Score: 0.88 | 1 km | ⭐ 5
-     2. Technology Corner — Score: 0.87 | 1.4 km | ⭐ 4.9
-     3. Building maintenance islamabad — Score: 0.8 | 2.2 km | ⭐ 5
+     1. Islamabad Quick Fix — Score: 0.61 | 2.8 km | ⭐ 4.2
+     2. Abbasi Electric & AC Repair — Score: 0.5 | 10.6 km | ⭐ 4.9
+     3. Raja AC Services Islamabad — Score: 0.49 | 10 km | ⭐ 4.7
 
-     Selected: ASAD MAHMOOD HOME SERVICES
-     ✅ Selected  : ASAD MAHMOOD HOME SERVICES
-     ✅ Score     : 0.88
-     ✅ Distance  : 1 km
-     ✅ Rating    : 5
+     Selected: Islamabad Quick Fix
 
-[04] execute_booking INVOKED
+◇ [Trace Event] Step 3
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "rank_and_select",
+  "step": 3,
+  "input": {
+    "providersCount": 5,
+    "time_preference": "today_urgent"
+  },
+  "reasoning": "Scoring and ranking providers using proximity (40%), rating (35%), and availability (25%).",
+  "output": {
+    "name": "Islamabad Quick Fix",
+    "distance": "2.8 km",
+    "rating": 4.2,
+    "score": 0.61
+  },
+  "duration_ms": 1,
+  "status": "success"
+}
 
 --- Running execute_booking ---
-Booking: ASAD MAHMOOD HOME SERVICES for user user_test_123
-✅ Firebase write success — booking_id: BK-1779101597765
+Booking: Islamabad Quick Fix for user user_test_123
+✅ Firebase write success — booking_id: BK-1779233208500
 ✅ Document path: active_bookings/user_test_123
-     ✅ booking_id : BK-1779101597765
-     ✅ status     : confirmed
-     ✅ Firebase   : active_bookings/user_test_123
 
-[05] schedule_followup INVOKED
+◇ [Trace Event] Step 4
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "execute_booking",
+  "step": 4,
+  "input": {
+    "selectedProvider": "Islamabad Quick Fix",
+    "userId": "user_test_123"
+  },
+  "reasoning": "Simulating booking execution. Writing confirmation document to active_bookings/user_test_123.",
+  "output": {
+    "booking_id": "BK-1779233208500",
+    "user_id": "user_test_123",
+    "status": "confirmed",
+    "provider_name": "Islamabad Quick Fix",
+    "service_category": "Electrician",
+    "service_time": "Today",
+    "provider_distance": "2.8 km",
+    "provider_rating": "4.2",
+    "reasoning": "Selected as the closest available provider with a 4.2 rating.",
+    "created_at": "2026-05-19T23:26:48.500Z",
+    "reminder_at": "2026-05-20T23:26:48.500Z"
+  },
+  "duration_ms": 434,
+  "status": "success"
+}
 
 --- Running schedule_followup ---
-Reminder scheduled for: 2026-05-19T10:53:17.765Z
-     ✅ Reminder   : 2026-05-19T10:53:17.765Z
-     ✅ Message    : Reminder: ASAD MAHMOOD HOME SERVICES arrives in 1 hour.
+Reminder scheduled for: 2026-05-20T23:26:48.500Z
 
-═══════════════════════════════════════════════════
-       PIPELINE COMPLETE ✅                         
-═══════════════════════════════════════════════════
+◇ [Trace Event] Step 5
+{
+  "agent": "HunarLinkOrchestrator",
+  "tool": "schedule_followup",
+  "step": 5,
+  "input": {
+    "booking_id": "BK-1779233208500"
+  },
+  "reasoning": "Booking confirmed. Generating reminder payload and scheduling follow-up notification.",
+  "output": {
+    "booking_id": "BK-1779233208500",
+    "trigger_at": "2026-05-20T23:26:48.500Z",
+    "message": "Reminder: Islamabad Quick Fix arrives in 1 hour.",
+    "status": "reminder_scheduled"
+  },
+  "duration_ms": 0,
+  "status": "success"
+}
 
-  Final Booking Summary:
-  ├─ Booking ID : BK-1779101597765
-  ├─ Provider   : ASAD MAHMOOD HOME SERVICES
-  ├─ Service    : Electrician
-  ├─ Location   : I-8 Islamabad
-  ├─ Time       : Today
-  ├─ Distance   : 1 km
-  ├─ Rating     : 5
-  └─ Reminder   : 2026-05-19T10:53:17.765Z
-═══════════════════════════════════════════════════
+==================================================
+🤖 AGENT RUN COMPLETE
+==================================================
 
 Final result: {
-  "booking_id": "BK-1779101597765",
+  "booking_id": "BK-1779233208500",
   "user_id": "user_test_123",
   "status": "confirmed",
-  "provider_name": "ASAD MAHMOOD HOME SERVICES",
+  "provider_name": "Islamabad Quick Fix",
+  "service_category": "Electrician",
   "service_time": "Today",
-  "provider_distance": "1 km",
-  "provider_rating": "5",
-  "reasoning": "Selected as the closest available provider with a 5 rating.",
-  "created_at": "2026-05-18T10:53:17.765Z",
-  "reminder_at": "2026-05-19T10:53:17.765Z"
+  "provider_distance": "2.8 km",
+  "provider_rating": "4.2",
+  "reasoning": "Selected as the closest available provider with a 4.2 rating.",
+  "created_at": "2026-05-19T23:26:48.500Z",
+  "reminder_at": "2026-05-20T23:26:48.500Z"
 }
 
 -------------------------------------------
