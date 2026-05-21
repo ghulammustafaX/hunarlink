@@ -268,18 +268,14 @@ active_bookings/
 
 ### Assumptions
 1. All service requests are within Islamabad — location defaults to Islamabad if not specified
-2. Provider distance is estimated from result order (`index 0 = 1km`, `+0.4km` per result)
-3. Provider availability is simulated — real availability requires a two-sided provider app
-4. Booking confirmation is a Firestore write simulating a real system state change
-5. `userId` is a simple string — no full auth system in hackathon scope
-6. Single user session — no persistent history across app restarts
+2. Provider availability is simulated — real availability requires a two-sided provider app
+3. Booking confirmation is a Firestore write simulating a real system state change
+4. `userId` is a simple string — no full auth system in hackathon scope
 
 ### Limitations
-1. No real provider onboarding — providers from Google Maps, not a registered database
+1. No real provider onboarding — providers from Google Maps
 2. No payment integration — booking is simulated only
 3. Gemini free tier — ~20 requests/day; paid tier needed for production
-4. Local server — API on localhost; needs cloud deployment for production
-5. Android only — iOS not configured for hackathon scope
-6. Distance is GPS-calculated via Google Distance Matrix API (driving distance) — falls back to index-estimate if API unavailable
+4. Distance is GPS-calculated via Google Distance Matrix API (driving distance) — falls back to index-estimate if API unavailable
 
 > "Technology should be a bridge, not a barrier. HunarLink is our bridge to connect millions of skilled workers with those who need their services — all powered by the magic of AI."
