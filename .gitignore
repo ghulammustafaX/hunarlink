@@ -79,3 +79,8 @@ build/
 *.apk
 *.aab
 *.ipa
+
+# ─── Documentation ─────────────────────────────
+docs/
+mobile/docs/
+
